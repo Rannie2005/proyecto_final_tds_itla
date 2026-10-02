@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Iniciar Sesión - SIGEN{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center min-vh-80">
+    <div class="col-md-5">
+        <div class="card card-custom shadow-lg border-0">
+            <div class="card-body p-5">
+                <!-- Logo y Título -->
+                <div class="text-center mb-4">
+                    <img src="/plantillas/image.png" alt="Kema Constructora" class="logo mb-3" style="height: 80px;">
+                    <h2 class="company-name mb-2" style="color: #333; font-size: 2rem;">SIGEN</h2>
+                    <p class="text-muted">Sistema de Gestión de Almacén</p>
+                </div>
+
+                <!-- Mensajes -->
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}success{% endif %} alert-dismissible fade show mb-4" role="alert">
+                            <i class="bi bi-{% if message.tags == 'error' %}exclamation-triangle{% else %}check-circle{% endif %} me-2"></i>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <!-- Formulario de Login -->
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- Campo Usuario -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark">
+                            <i class="bi bi-person-circle me-2 text-primary"></i>Usuario
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="bi bi-person text-muted"></i>
+                            </span>
+                            <input type="text" name="username" class="form-control border-start-0 ps-0" 
+                                placeholder="Ingresa tu usuario" required autofocus>
+                        </div>
+                    </div>
+
+                    <!-- Campo Contraseña -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark">
+                            <i class="bi bi-shield-lock me-2 text-primary"></i>Contraseña
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="bi bi-key text-muted"></i>
+                            </span>
+                            <input type="password" name="password" class="form-control border-start-0 ps-0" 
+                                placeholder="Ingresa tu contraseña" required>
+                        </div>
+                    </div>
+
+                    <!-- Botón de Login -->
+                    <button type="submit" class="btn btn-custom w-100 py-2 fw-bold">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Entrar al Sistema
+                    </button>
+                    <div class="text-center mt-3">
+                        <a href="{% url 'password_reset' %}" class="text-decoration-none">
+                            <i class="bi bi-question-circle me-1"></i>¿Olvidaste tu contraseña?
+                        </a>
+                    </div>
+                </form>
+
+                <!-- Información adicional -->
+                <div class="text-center mt-4 pt-3 border-top">
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Sistema seguro - Solo personal autorizado
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta de información del sistema -->
+        
+    </div>
+</div>
+
+<style>
+.min-vh-80 {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+}
+.card-custom {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+}
+.input-group-text {
+    background-color: #f8f9fa !important;
+    border-color: #dee2e6;
+}
+.form-control:focus {
+    border-color: #333;
+    box-shadow: 0 0 0 0.2rem rgba(51, 51, 51, 0.25);
+}
+.btn-custom {
+    background: linear-gradient(135deg, #333 0%, #555 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+.btn-custom:hover {
+    background: linear-gradient(135deg, #555 0%, #777 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+</style>
+{% endblock %}
