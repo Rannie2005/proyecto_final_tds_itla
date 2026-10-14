@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprobante de Préstamo #{{ prestamo.id }} - Kema Constructora</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1cm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 21cm;
+            margin: 0 auto;
+            padding: 0;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 18px;
+            margin: 0;
+            font-weight: bold;
+        }
+        .header h2 {
+            font-size: 16px;
+            margin: 5px 0;
+            font-weight: bold;
+        }
+        .section {
+            margin-bottom: 15px;
+        }
+        .section-title {
+            font-weight: bold;
+            font-size: 13px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 3px;
+            margin-bottom: 8px;
+        }
+        .row {
+            display: flex;
+            margin-bottom: 5px;
+        }
+        .col-6 {
+            flex: 0 0 50%;
+        }
+        .col-4 {
+            flex: 0 0 33.333%;
+        }
+        .col-3 {
+            flex: 0 0 25%;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .table th, .table td {
+            border: 1px solid #000;
+            padding: 6px;
+            text-align: left;
+        }
+        .table th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+        .table-borderless td, .table-borderless th {
+            border: none;
+            padding: 4px 0;
+        }
+        .signature-section {
+            margin-top: 40px;
+            border-top: 1px solid #000;
+            padding-top: 20px;
+        }
+        .signature-box {
+            display: inline-block;
+            width: 45%;
+            text-align: center;
+            margin: 0 2.5%;
+        }
+        .signature-line {
+            border-bottom: 1px solid #000;
+            height: 40px;
+            margin-bottom: 5px;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 10px;
+            border-top: 1px solid #000;
+            padding-top: 10px;
+        }
+        .badge {
+            padding: 2px 6px;
+            font-size: 10px;
+            font-weight: bold;
+            border-radius: 2px;
+            text-transform: uppercase;
+        }
+        .badge-active { background-color: #ffc107; }
+        .badge-returned { background-color: #28a745; color: white; }
+        .badge-overdue { background-color: #dc3545; color: white; }
+        .badge-pending { background-color: #ff9800; color: white; }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .text-left { text-align: left; }
+        .mb-1 { margin-bottom: 5px; }
+        .mb-2 { margin-bottom: 10px; }
+        .mb-3 { margin-bottom: 15px; }
+        .mt-3 { margin-top: 15px; }
+        .p-2 { padding: 8px; }
+        .border { border: 1px solid #000; }
+        .border-bottom { border-bottom: 1px solid #000; }
+        .bg-light { background-color: #f8f9fa; }
+        .legal-note {
+            background-color: #fff8e1;
+            border-left: 3px solid #ff9800;
+            padding: 8px 12px;
+            margin: 10px 0;
+            font-size: 10px;
+        }
+        .state-badge-good { 
+            display: inline-block;
+            padding: 2px 8px;
+            background-color: #28a745;
+            color: white;
+            border-radius: 3px;
+            font-size: 10px;
+        }
+        .state-badge-damaged {
+            display: inline-block;
+            padding: 2px 8px;
+            background-color: #ffc107;
+            color: #000;
+            border-radius: 3px;
+            font-size: 10px;
+        }
+        .state-badge-lost {
+            display: inline-block;
+            padding: 2px 8px;
+            background-color: #dc3545;
+            color: white;
+            border-radius: 3px;
+            font-size: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Encabezado -->
+        <div class="header">
+            <h1>KEMA CONSTRUCTORA</h1>
+            <h2>COMPROBANTE DE PRÉSTAMO</h2>
+            <div class="row">
+                <div class="col-6 text-center">
+                    <strong>N° Comprobante: {{ prestamo.id|stringformat:"06d" }}</strong>
+                </div>
+                <div class="col-6 text-center">
+                    <strong>Fecha: {{ prestamo.fecha_prestamo|date:"d/m/Y H:i" }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información del Comprobante -->
+        <div class="section">
+            <div class="section-title">INFORMACIÓN DEL COMPROBANTE</div>
+            <div class="row">
+                <div class="col-6">
+                    <strong>Estado:</strong> 
+                    <span class="badge 
+                        {% if prestamo.estado == 'activo' %}badge-active
+                        {% elif prestamo.estado == 'devuelto' %}badge-returned
+                        {% elif prestamo.estado == 'vencido' %}badge-overdue
+                        {% elif prestamo.estado == 'parcial' %}badge-pending
+                        {% endif %}">
+                        {{ prestamo.get_estado_display|upper }}
+                    </span>
+                </div>
+                <div class="col-6">
+                    {% if prestamo.fecha_devolucion_real %}
+                    <strong>Fecha Devolución:</strong> {{ prestamo.fecha_devolucion_real|date:"d/m/Y H:i" }}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Información del Prestador -->
+        <div class="section">
+            <div class="section-title">INFORMACIÓN DEL PRESTADOR</div>
+            <div class="row">
+                <div class="col-6">
+                    <strong>Prestado por:</strong> {{ prestamo.prestado_por.get_full_name|default:prestamo.prestado_por.username }}
+                </div>
+                <div class="col-6">
+                    <strong>Usuario:</strong> {{ prestamo.prestado_por.username }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Resumen del Préstamo -->
+        <div class="section">
+            <div class="section-title">RESUMEN DEL PRÉSTAMO</div>
+            <div class="row mb-3">
+                <div class="col-3 text-center border p-2">
+                    <strong>PRESTADO</strong><br>
+                    <h4 class="mb-0">{{ prestamo.cantidad_prestada }}</h4>
+                    <small>{{ prestamo.herramienta.tipo_unidad.abreviatura }}</small>
+                </div>
+                <div class="col-3 text-center border p-2">
+                    <strong>PENDIENTE</strong><br>
+                    <h4 class="mb-0">{{ prestamo.pendiente_por_devolver }}</h4>
+                    <small>{{ prestamo.herramienta.tipo_unidad.abreviatura }}</small>
+                </div>
+                <div class="col-3 text-center border p-2">
+                    <strong>DEV. ESTIMADA</strong><br>
+                    <strong>{{ prestamo.fecha_devolucion_estimada|date:"d/m/Y" }}</strong><br>
+                    {% if prestamo.esta_vencido %}
+                    <small class="badge badge-overdue">VENCIDO</small>
+                    {% endif %}
+                </div>
+                <div class="col-3 text-center border p-2">
+                    <strong>CÓDIGO</strong><br>
+                    <strong>{{ prestamo.herramienta.codigo }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Herramienta Prestada -->
+        <div class="section">
+            <div class="section-title">HERRAMIENTA PRESTADA</div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Descripción</th>
+                        <th>Categoría</th>
+                        <th>Cantidad</th>
+                        <th>Stock Disponible</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{ prestamo.herramienta.nombre }}</td>
+                        <td>{{ prestamo.herramienta.categoria.nombre }}</td>
+                        <td>{{ prestamo.cantidad_prestada }} {{ prestamo.herramienta.tipo_unidad.abreviatura }}</td>
+                        <td>{{ prestamo.herramienta.stock_disponible }} {{ prestamo.herramienta.tipo_unidad.abreviatura }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Información del Receptor -->
+        <div class="section">
+            <div class="section-title">INFORMACIÓN DEL RECEPTOR</div>
+            <div class="row">
+                <div class="col-6">
+                    <strong>Nombre:</strong>
+                    {% if prestamo.empleado %}
+                        {{ prestamo.empleado.nombre_completo|default:prestamo.empleado.nombre }}
+                    {% else %}
+                        {{ prestamo.cliente_externo }}
+                    {% endif %}
+                </div>
+                <div class="col-6">
+                    <strong>Identificación:</strong>
+                    {% if prestamo.empleado %}
+                        {{ prestamo.empleado.cedula|default:"No especificada" }}
+                    {% else %}
+                        {{ prestamo.cedula_externo|default:"No especificada" }}
+                    {% endif %}
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-6">
+                    <strong>Tipo:</strong>
+                    {% if prestamo.empleado %}
+                        <strong>EMPLEADO</strong>
+                    {% else %}
+                        <strong>CLIENTE EXTERNO</strong>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Devoluciones Registradas -->
+        {% if prestamo.cantidad_total_devuelta > 0 %}
+        <div class="section">
+            <div class="section-title">DEVOLUCIONES REGISTRADAS</div>
+            <div class="row mb-3">
+                <div class="col-3 text-center border p-2">
+                    <strong>BUEN ESTADO</strong><br>
+                    <span class="state-badge-good">✓</span>
+                    <h4>{{ prestamo.cantidad_devuelta_buen_estado|default:"0" }}</h4>
+                    <small>{{ prestamo.herramienta.tipo_unidad.abreviatura }}</small>
+                </div>
+                <div class="col-3 text-center border p-2">
+                    <strong>DAÑADOS</strong><br>
+                    <span class="state-badge-damaged">⚠</span>
+                    <h4>{{ prestamo.cantidad_devuelta_danada|default:"0" }}</h4>
+                    <small>{{ prestamo.herramienta.tipo_unidad.abreviatura }}</small>
+                </div>
+                <div class="col-3 text-center border p-2">
+                    <strong>PERDIDOS</strong><br>
+                    <span class="state-badge-lost">✗</span>
+                    <h4>{{ prestamo.cantidad_devuelta_perdida|default:"0" }}</h4>
+                    <small>{{ prestamo.herramienta.tipo_unidad.abreviatura }}</small>
+                </div>
+                <div class="col-3 text-center border p-2">
+                    <strong>TOTAL DEV.</strong><br>
+                    <h4>{{ prestamo.cantidad_total_devuelta }}</h4>
+                    <small>{{ prestamo.herramienta.tipo_unidad.abreviatura }}</small>
+                </div>
+            </div>
+            
+            <!-- Detalle por estado si hay múltiples estados -->
+            {% if prestamo.cantidad_devuelta_danada > 0 or prestamo.cantidad_devuelta_perdida > 0 %}
+            <div class="legal-note">
+                <strong>📋 Nota de devolución:</strong> De las {{ prestamo.cantidad_total_devuelta }} unidades devueltas, 
+                {% if prestamo.cantidad_devuelta_buen_estado > 0 %}{{ prestamo.cantidad_devuelta_buen_estado }} en <span class="state-badge-good">BUEN ESTADO</span>{% endif %}
+                {% if prestamo.cantidad_devuelta_danada > 0 %}{% if prestamo.cantidad_devuelta_buen_estado > 0 %}, {% endif %}{{ prestamo.cantidad_devuelta_danada }} en <span class="state-badge-damaged">ESTADO DAÑADO</span>{% endif %}
+                {% if prestamo.cantidad_devuelta_perdida > 0 %}{% if prestamo.cantidad_devuelta_buen_estado > 0 or prestamo.cantidad_devuelta_danada > 0 %}, {% endif %}{{ prestamo.cantidad_devuelta_perdida }} en <span class="state-badge-lost">ESTADO PERDIDO</span>{% endif %}.
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Observaciones -->
+        {% if prestamo.observaciones %}
+        <div class="section">
+            <div class="section-title">OBSERVACIONES</div>
+            <p>{{ prestamo.observaciones }}</p>
+        </div>
+        {% endif %}
+
+        <!-- NUEVA DECLARACIÓN DE RESPONSABILIDAD Y CLÁUSULA LEGAL ACTUALIZADA -->
+        <div class="section">
+            <div class="section-title">DECLARACIÓN DE RESPONSABILIDAD Y CLÁUSULA LEGAL</div>
+            <p class="mb-2">
+                El receptor declara bajo protesta de decir verdad haber recibido la(s) herramienta(s) o material(es) descrito(s) en este comprobante, en condiciones físicas y operativas adecuadas para su uso habitual. 
+            </p>
+            
+            <p class="mb-2">
+                <strong>DE LA DEVOLUCIÓN:</strong> El receptor podrá devolver los bienes de forma parcial o total, en cualquiera de los siguientes estados:
+            </p>
+            <ul class="mb-2" style="margin-top: 0; margin-left: 20px;">
+                <li><span class="">BUEN ESTADO</span> - Sin daños, funcionando correctamente, apto para nuevo uso.</li>
+                <li><span class="">DAÑADO</span> - Con desperfectos reparables o desgaste anormal.</li>
+                <li><span class="">PERDIDO</span> - No se devuelve el bien físico por pérdida, robo o hurto.</li>
+            </ul>
+            
+            <p class="mb-2">
+                En caso de devolución en estado <strong>DAÑADO</strong>, el receptor se obliga a cubrir el <strong>costo de reparación certificada</strong> del bien, según valoración del área técnica de KEMA CONSTRUCTORA. 
+                En caso de devolución en estado <strong>PERDIDO</strong> o cuando el daño sea irreparable, el receptor se obliga a cubrir el <strong>costo de reposición a valor comercial actual</strong> del bien, conforme a los registros internos de KEMA CONSTRUCTORA.
+            </p>
+            
+            <p class="mb-2">
+                <strong>DE LA DEVOLUCIÓN PARCIAL:</strong> Si el receptor no devuelve la totalidad de los bienes prestados en la fecha estimada, el saldo pendiente se mantendrá registrado. Sobre las unidades NO DEVUELTAS (ya sea por no presentarlas o por declararse como PERDIDAS) continuará corriendo el cargo por mora y las acciones legales correspondientes.
+            </p>
+            
+            <p class="mb-2">
+                La no devolución del <strong>saldo pendiente</strong> en la fecha estimada generará un <strong>cargo por mora</strong> equivalente al <strong>2% del valor comercial del bien por cada día de retraso</strong>, aplicable únicamente sobre las unidades NO DEVUELTAS (excluyendo las devueltas en buen estado o dañadas que ya fueron entregadas físicamente).
+            </p>
+            
+            <!-- Nota especial según el tipo de devolución -->
+            {% if prestamo.cantidad_devuelta_perdida > 0 or prestamo.cantidad_devuelta_danada > 0 %}
+            <div class="legal-note">
+                <strong>⚠️ RESPONSABILIDAD ECONÓMICA POR ESTE PRÉSTAMO:</strong>
+                <ul style="margin: 5px 0 0 20px;">
+                    {% if prestamo.cantidad_devuelta_danada > 0 %}
+                    <li><strong>{{ prestamo.cantidad_devuelta_danada }} unidad(es) en estado DAÑADO:</strong> El receptor deberá pagar el <strong>costo de reparación certificada</strong> de cada unidad.</li>
+                    {% endif %}
+                    {% if prestamo.cantidad_devuelta_perdida > 0 %}
+                    <li><strong>{{ prestamo.cantidad_devuelta_perdida }} unidad(es) en estado PERDIDO:</strong> El receptor deberá pagar el <strong>costo de reposición a valor comercial actual</strong> de cada unidad.</li>
+                    {% endif %}
+                    {% if prestamo.pendiente_por_devolver > 0 %}
+                    <li><strong>{{ prestamo.pendiente_por_devolver }} unidad(es) PENDIENTES:</strong> Continúa generando cargo por mora del 2% diario sobre su valor comercial hasta su devolución o declaración de pérdida.</li>
+                    {% endif %}
+                </ul>
+            </div>
+            {% elif prestamo.pendiente_por_devolver > 0 %}
+            <div class="legal-note">
+                <strong>⚠️ NOTA:</strong> Quedan pendientes por devolver <strong>{{ prestamo.pendiente_por_devolver }} {{ prestamo.herramienta.tipo_unidad.abreviatura }}</strong>. Sobre estas unidades aplica el cargo por mora del 2% diario sobre su valor comercial.
+            </div>
+            {% else %}
+            <p class="mb-2" style="color: #28a745;">
+                <strong>✓ DEVOLUCIÓN COMPLETA:</strong> Se ha registrado la devolución de la totalidad de las unidades prestadas ({{ prestamo.cantidad_total_devuelta }} de {{ prestamo.cantidad_prestada }}). El receptor queda liberado de toda obligación respecto a este comprobante, excepto los pagos pendientes por daños o pérdidas si los hubiere.
+            </p>
+            {% endif %}
+            
+            <p class="mb-0 mt-2">
+                <strong>ACEPTACIÓN:</strong> El receptor, al firmar este comprobante, acepta expresamente todas las condiciones aquí estipuladas, incluyendo la responsabilidad económica por devoluciones en estados diferentes al "Buen Estado" y los cargos por mora sobre unidades pendientes.
+            </p>
+        </div>
+
+        <!-- Firmas -->
+        <div class="signature-section">
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <strong>PRESTADOR</strong><br>
+                {{ prestamo.prestado_por.get_full_name|default:prestamo.prestado_por.username }}
+            </div>
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <strong>RECEPTOR</strong><br>
+                {% if prestamo.empleado %}
+                    {{ prestamo.empleado.nombre_completo|default:prestamo.empleado.nombre }}
+                {% else %}
+                    {{ prestamo.cliente_externo }}
+                {% endif %}
+                <br>
+                <small>(Acepto las condiciones de devolución y responsabilidades)</small>
+            </div>
+        </div>
+
+        <!-- Pie de página -->
+        <div class="footer">
+            <strong>KEMA CONSTRUCTORA - Sistema de Gestión de Almacén</strong><br>
+            Comprobante generado el {% now "d/m/Y H:i" %}<br>
+            Este documento es válido solo con el sello y firma autorizada.
+        </div>
+    </div>
+
+    <script>
+        // Imprimir automáticamente al cargar
+        window.onload = function() {
+            window.print();
+            // Opcional: cerrar ventana después de imprimir
+            setTimeout(function() {
+                window.close();
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

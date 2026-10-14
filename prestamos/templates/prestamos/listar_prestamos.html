@@ -1,0 +1,443 @@
+<!-- prestamos/templates/prestamos/listar_prestamos.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title|default:"Préstamos - Kema Constructora" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="bi bi-arrow-up-circle me-2 text-primary"></i>Préstamos Registrados
+                    </h2>
+                    <p class="text-muted mb-0">Gestión de préstamos a empleados y clientes</p>
+                </div>
+                <div>
+                    <a href="{% url 'prestamos:crear_prestamo' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i> Nuevo Préstamo
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Estado</label>
+                            <select name="estado" class="form-select">
+                                <option value="">Todos los estados</option>
+                                {% for key, value in estados.items %}
+                                    <option value="{{ key }}" {% if request.GET.estado == key %}selected{% endif %}>
+                                        {{ value }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Cliente/Empleado</label>
+                            <input type="text" name="cliente" class="form-control" 
+                                   placeholder="Nombre del cliente" value="{{ request.GET.cliente }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Herramienta</label>
+                            <input type="text" name="herramienta" class="form-control" 
+                                   placeholder="Nombre herramienta" value="{{ request.GET.herramienta }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Fecha</label>
+                            <input type="date" name="fecha_inicio" class="form-control" 
+                                   value="{{ request.GET.fecha_inicio }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Hasta</label>
+                            <input type="date" name="fecha_fin" class="form-control" 
+                                   value="{{ request.GET.fecha_fin }}">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <div class="btn-group w-100">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-filter me-1"></i> Filtrar
+                                </button>
+                                <a href="{% url 'prestamos:listar_prestamos' %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-circle me-1"></i> Limpiar
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tarjetas de Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Total Préstamos</h6>
+                            <h3 class="mb-0">{{ total_prestamos }}</h3>
+                        </div>
+                        <i class="bi bi-list-ul fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Préstamos Activos</h6>
+                            <h3 class="mb-0">{{ prestamos_activos }}</h3>
+                        </div>
+                        <i class="bi bi-clock fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Devueltos</h6>
+                            <h3 class="mb-0">{{ prestamos_devueltos }}</h3>
+                        </div>
+                        <i class="bi bi-check-circle fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Vencidos</h6>
+                            <h3 class="mb-0">{{ prestamos_vencidos|default:"0" }}</h3>
+                        </div>
+                        <i class="bi bi-exclamation-triangle fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Préstamos -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-body">
+                    {% if prestamos %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Herramienta</th>
+                                        <th>Cliente</th>
+                                        <th>Cantidad</th>
+                                        <th>Fecha Préstamo</th>
+                                        <th>Fecha Devolución</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for prestamo in prestamos %}
+                                    <tr>
+                                        <td>#{{ prestamo.id }}</td>
+                                        <td>
+                                            <strong>{{ prestamo.herramienta.nombre }}</strong>
+                                            <br><small class="text-muted">{{ prestamo.herramienta.codigo }}</small>
+                                        </td>
+                                        <td>{{ prestamo.cliente }}</td>
+                                        <td>{{ prestamo.cantidad }}</td>
+                                        <td>{{ prestamo.fecha_prestamo|date:"d/m/Y H:i" }}</td>
+                                        <td>
+                                            {{ prestamo.fecha_devolucion_estimada|date:"d/m/Y" }}
+                                            {% if prestamo.esta_vencido %}
+                                                <br><small class="text-danger">¡Vencido!</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if prestamo.estado == 'activo' %}
+                                                <span class="badge bg-warning">Activo</span>
+                                            {% elif prestamo.estado == 'devuelto' %}
+                                                <span class="badge bg-success">Devuelto</span>
+                                            {% elif prestamo.estado == 'vencido' %}
+                                                <span class="badge bg-danger">Vencido</span>
+                                            {% elif prestamo.estado == 'cancelado' %}
+                                                <span class="badge bg-secondary">Cancelado</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{% url 'prestamos:comprobante_prestamo' prestamo.id %}" 
+                                                   class="btn btn-outline-primary" title="Ver Comprobante">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                {% if prestamo.estado == 'activo' %}
+                                                    <a href="{% url 'prestamos:devolver_prestamo' prestamo.id %}" 
+                                                       class="btn btn-outline-success" title="Registrar Devolución">
+                                                        <i class="bi bi-arrow-return-left"></i>
+                                                    </a>
+                                                {% endif %}
+                                                <a href="{% url 'prestamos:descargar_pdf_prestamo' prestamo.id %}" 
+                                                   class="btn btn-outline-info" title="Descargar PDF">
+                                                    <i class="bi bi-download"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Paginación -->
+                        {% if prestamos.has_other_pages %}
+                        <nav aria-label="Paginación de préstamos">
+                            <ul class="pagination justify-content-center">
+                                {% if prestamos.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ prestamos.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                            Anterior
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">Anterior</span>
+                                    </li>
+                                {% endif %}
+
+                                {% for num in prestamos.paginator.page_range %}
+                                    {% if prestamos.number == num %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ num }}</span>
+                                        </li>
+                                    {% elif num > prestamos.number|add:'-3' and num < prestamos.number|add:'3' %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                                {{ num }}
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if prestamos.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ prestamos.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                            Siguiente
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">Siguiente</span>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-inbox fa-3x text-muted mb-3"></i>
+                            <h4>No hay préstamos registrados</h4>
+                            <p class="text-muted">Comienza registrando tu primer préstamo</p>
+                            <a href="{% url 'prestamos:crear_prestamo' %}" class="btn btn-primary">
+                                <i class="bi bi-plus-circle me-1"></i> Registrar Primer Préstamo
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Acciones Rápidas -->
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-arrow-clockwise me-2"></i>Devoluciones Pendientes
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for prestamo in prestamos|slice:":5" %}
+                            {% if prestamo.estado == 'activo' and prestamo.esta_vencido %}
+                                <div class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <small>{{ prestamo.herramienta.nombre|truncatechars:20 }}</small>
+                                        <span class="badge bg-danger">¡Vencido!</span>
+                                    </div>
+                                    <small class="text-muted">
+                                        {{ prestamo.cliente }} • Vence: {{ prestamo.fecha_devolucion_estimada|date:"d/m/Y" }}
+                                    </small>
+                                </div>
+                            {% endif %}
+                        {% empty %}
+                            <div class="text-center py-3">
+                                <small class="text-muted">No hay devoluciones pendientes</small>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-graph-up me-2"></i>Información Útil
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="alert alert-info">
+                                <h6><i class="bi bi-info-circle me-2"></i>Consejos</h6>
+                                <ul class="mb-0 small">
+                                    <li>Verifica el estado de las herramientas antes de prestar</li>
+                                    <li>Establece fechas de devolución realistas</li>
+                                    <li>Registra observaciones importantes</li>
+                                    <li>Comunica al cliente las condiciones del préstamo</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="alert alert-warning">
+                                <h6><i class="bi bi-exclamation-triangle me-2"></i>Atención</h6>
+                                <ul class="mb-0 small">
+                                    <li>Revisa préstamos próximos a vencer</li>
+                                    <li>Contacta a clientes con préstamos vencidos</li>
+                                    <li>Actualiza el estado después de cada devolución</li>
+                                    <li>Verifica condiciones de devolución</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <small class="text-muted">
+                            <i class="bi bi-clock-history me-1"></i>
+                            Actualizado: {% now "d/m/Y H:i" %}
+                        </small>
+                        <a href="{% url 'prestamos:dashboard_devoluciones' %}" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-arrow-return-left me-1"></i> Ir a Devoluciones
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para detalles rápidos -->
+<div class="modal fade" id="modalDetalles" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalles del Préstamo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="modalDetallesBody">
+                <!-- Los detalles se cargarán aquí con JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .table th {
+        background-color: #f8f9fa;
+        border-top: none;
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .table td {
+        vertical-align: middle;
+    }
+    
+    .badge {
+        font-size: 0.85em;
+        padding: 5px 10px;
+    }
+    
+    .card {
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .card-header {
+        border-radius: 10px 10px 0 0 !important;
+        background-color: #f8f9fa;
+    }
+    
+    .list-group-item {
+        border-left: none;
+        border-right: none;
+    }
+    
+    .list-group-item:first-child {
+        border-top: none;
+    }
+    
+    .btn-group-sm > .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .pagination .page-item.active .page-link {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Funcionalidad para ver detalles rápidos
+        const detalleBtns = document.querySelectorAll('.btn-detalle');
+        detalleBtns.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const prestamoId = this.dataset.id;
+                
+                // Aquí podrías hacer una llamada AJAX para obtener los detalles
+                // Por ahora, redirigimos directamente al comprobante
+                window.location.href = `/prestamos/prestamo/${prestamoId}/comprobante/`;
+            });
+        });
+        
+        // Establecer fecha máxima como hoy para filtros
+        const fechaInputs = document.querySelectorAll('input[type="date"]');
+        const today = new Date().toISOString().split('T')[0];
+        fechaInputs.forEach(input => {
+            input.max = today;
+        });
+        
+        // Auto-filtrar al cambiar select de estado
+        const estadoSelect = document.querySelector('select[name="estado"]');
+        if (estadoSelect) {
+            estadoSelect.addEventListener('change', function() {
+                this.form.submit();
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factura de Venta - {{ venta.numero_factura }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1cm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 21cm;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 18px;
+            margin: 0;
+            font-weight: bold;
+        }
+        .header h2 {
+            font-size: 16px;
+            margin: 5px 0;
+            font-weight: bold;
+        }
+        .section {
+            margin-bottom: 15px;
+        }
+        .section-title {
+            font-weight: bold;
+            font-size: 13px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 3px;
+            margin-bottom: 8px;
+        }
+        .row {
+            display: flex;
+            margin-bottom: 5px;
+        }
+        .col-6 {
+            flex: 0 0 50%;
+        }
+        .col-4 {
+            flex: 0 0 33.333%;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .table th, .table td {
+            border: 1px solid #000;
+            padding: 6px;
+            text-align: left;
+        }
+        .table th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+        .totals-table {
+            width: 50%;
+            margin-left: auto;
+        }
+        .totals-table td {
+            border: 1px solid #000;
+            padding: 6px;
+        }
+        .totals-table tr:last-child {
+            font-weight: bold;
+            background-color: #f0f0f0;
+        }
+        .signature-section {
+            margin-top: 40px;
+            border-top: 1px solid #000;
+            padding-top: 20px;
+        }
+        .signature-box {
+            display: inline-block;
+            width: 45%;
+            text-align: center;
+            margin: 0 2.5%;
+        }
+        .signature-line {
+            border-bottom: 1px solid #000;
+            height: 40px;
+            margin-bottom: 5px;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 10px;
+            border-top: 1px solid #000;
+            padding-top: 10px;
+        }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .mb-1 { margin-bottom: 5px; }
+        .mb-2 { margin-bottom: 10px; }
+        .mt-3 { margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Encabezado -->
+        <div class="header">
+            <h1>KEMA CONSTRUCTORA</h1>
+            <h2>FACTURA DE VENTA</h2>
+            <div class="row">
+                <div class="col-6 text-center">
+                    <strong>N° Factura: {{ venta.numero_factura }}</strong>
+                </div>
+                <div class="col-6 text-center">
+                    <strong>Fecha: <span id="fecha-actual"></span></strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información del Cliente -->
+        <div class="section">
+            <div class="section-title">INFORMACIÓN DEL CLIENTE</div>
+            <div class="row">
+                <div class="col-6">
+                    <strong>Nombre:</strong> {{ venta.cliente_nombre }}
+                </div>
+                <div class="col-6">
+                    <strong>Cédula/RNC:</strong> {{ venta.cliente_cedula|default:"No especificada" }}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-6">
+                    <strong>Teléfono:</strong> {{ venta.cliente_telefono|default:"No especificado" }}
+                </div>
+                <div class="col-6">
+                    <strong>Fecha Venta:</strong> <span id="fecha-venta"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detalles de la Venta -->
+        <div class="section">
+            <div class="section-title">DETALLES DE LA VENTA</div>
+            <table class="table">
+                <tr>
+                    <th>Descripción</th>
+                    <th>Cantidad</th>
+                    <th>Precio Unitario</th>
+                    <th>Total</th>
+                </tr>
+                <tr>
+                    <td>{{ venta.herramienta.nombre }}</td>
+                    <td>{{ venta.cantidad_vendida }} {{ venta.herramienta.tipo_unidad.abreviatura }}</td>
+                    <td>RD$ {{ venta.precio_unitario }}</td>
+                    <td>RD$ {{ venta.total }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Información del Producto -->
+        <div class="section">
+            <div class="section-title">INFORMACIÓN DEL PRODUCTO</div>
+            <div class="row">
+                <div class="col-6">
+                    <strong>Código:</strong> {{ venta.herramienta.codigo }}
+                </div>
+                <div class="col-6">
+                    <strong>Categoría:</strong> {{ venta.herramienta.categoria }}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-6">
+                    <strong>Marca:</strong> {{ venta.herramienta.marca|default:"No especificada" }}
+                </div>
+                <div class="col-6">
+                    <strong>Modelo:</strong> {{ venta.herramienta.modelo|default:"No especificado" }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Resumen de Pago -->
+        <div class="section">
+            <div class="section-title">RESUMEN DE PAGO</div>
+            <table class="totals-table">
+                <tr>
+                    <td><strong>Subtotal:</strong></td>
+                    <td class="text-right">RD$ {{ venta.total }}</td>
+                </tr>
+                <tr>
+                    <td><strong>ITBIS (18%):</strong></td>
+                    <td class="text-right">RD$ {% widthratio venta.total 1 0.18 %}</td>
+                </tr>
+                <tr>
+                    <td><strong>TOTAL GENERAL:</strong></td>
+                    <td class="text-right">RD$ {% widthratio venta.total 1 1.18 %}</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Información del Vendedor -->
+        <div class="section">
+            <div class="section-title">INFORMACIÓN DEL VENDEDOR</div>
+            <div class="row">
+                <div class="col-6">
+                    <strong>Vendedor:</strong> {{ venta.vendedor.get_full_name|default:venta.vendedor.username }}
+                </div>
+                <div class="col-6">
+                    <strong>Usuario:</strong> {{ venta.vendedor.username }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Firmas -->
+        <div class="signature-section">
+            <div class="row">
+                <div class="signature-box">
+                    <div class="signature-line"></div>
+                    <strong>VENDEDOR</strong><br>
+                    {{ venta.vendedor.get_full_name|default:venta.vendedor.username }}
+                </div>
+                <div class="signature-box">
+                    <div class="signature-line"></div>
+                    <strong>CLIENTE</strong><br>
+                    {{ venta.cliente_nombre }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Pie de página -->
+        <div class="footer">
+            <strong>KEMA CONSTRUCTORA - Sistema de Gestión de Almacén</strong><br>
+            Teléfono: 809-555-5555 | RNC: 1-23-45678-9<br>
+            Esta factura sirve como constancia de la venta realizada. Productos sin garantía a menos que se especifique.
+        </div>
+    </div>
+
+    <script>
+        // Función para formatear la fecha en formato dominicano
+        function formatearFecha(fecha) {
+            const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+            const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            
+            const diaSemana = dias[fecha.getDay()];
+            const dia = fecha.getDate();
+            const mes = meses[fecha.getMonth()];
+            const año = fecha.getFullYear();
+            
+            return `${diaSemana}, ${dia} de ${mes} del ${año}`;
+        }
+
+        // Obtener fecha actual
+        const fechaActual = new Date();
+        
+        // Mostrar fecha actual
+        document.getElementById('fecha-actual').textContent = formatearFecha(fechaActual);
+        document.getElementById('fecha-venta').textContent = formatearFecha(fechaActual);
+
+        // Imprimir automáticamente al cargar
+        window.onload = function() {
+            window.print();
+        }
+    </script>
+</body>
+</html>

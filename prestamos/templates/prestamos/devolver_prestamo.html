@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-arrow-return-left me-2"></i>Devolver Préstamo
+                    </h4>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Info del préstamo -->
+                    <div class="alert alert-info">
+                        <h5 class="alert-heading">Préstamo #{{ prestamo.id }}</h5>
+                        <p class="mb-1"><strong>Herramienta:</strong> {{ prestamo.herramienta.nombre }}</p>
+                        <p class="mb-1"><strong>Cantidad prestada:</strong> {{ prestamo.cantidad_prestada }}</p>
+                        <p class="mb-1"><strong>Pendiente por devolver:</strong> <span class="badge bg-warning">{{ pendiente }}</span></p>
+                        <p class="mb-0"><strong>Prestado a:</strong> {{ prestamo.quien_recibe }}</p>
+                    </div>
+                    
+                    <form method="post" id="devolucionForm">
+                        {% csrf_token %}
+                        
+                        <!-- Distribución de la devolución -->
+                        <div class="mb-4">
+                            <h5 class="mb-3">Distribuir la devolución</h5>
+                            <p class="text-muted mb-3">Especifique cuántos artículos se devuelven en cada estado:</p>
+                            
+                            <div class="row g-3">
+                                <!-- Buen estado -->
+                                <div class="col-md-4">
+                                    <div class="card border-success h-100">
+                                        <div class="card-body text-center">
+                                            <i class="bi bi-check-circle-fill text-success fs-1 mb-2"></i>
+                                            <h6 class="fw-bold">Buen Estado</h6>
+                                            <small class="text-muted d-block mb-2">Listos para reutilizar</small>
+                                            <input type="number" 
+                                                   name="buenos" 
+                                                   class="form-control text-center" 
+                                                   min="0" 
+                                                   max="{{ pendiente }}"
+                                                   step="0.01"
+                                                   value="0"
+                                                   onchange="actualizarTotal()">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Dañados -->
+                                <div class="col-md-4">
+                                    <div class="card border-warning h-100">
+                                        <div class="card-body text-center">
+                                            <i class="bi bi-tools text-warning fs-1 mb-2"></i>
+                                            <h6 class="fw-bold">Dañados</h6>
+                                            <small class="text-muted d-block mb-2">Requieren reparación</small>
+                                            <input type="number" 
+                                                   name="danados" 
+                                                   class="form-control text-center" 
+                                                   min="0" 
+                                                   max="{{ pendiente }}"
+                                                   step="0.01"
+                                                   value="0"
+                                                   onchange="actualizarTotal()">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Perdidos -->
+                                <div class="col-md-4">
+                                    <div class="card border-danger h-100">
+                                        <div class="card-body text-center">
+                                            <i class="bi bi-question-circle text-danger fs-1 mb-2"></i>
+                                            <h6 class="fw-bold">Perdidos</h6>
+                                            <small class="text-muted d-block mb-2">No recuperables</small>
+                                            <input type="number" 
+                                                   name="perdidos" 
+                                                   class="form-control text-center" 
+                                                   min="0" 
+                                                   max="{{ pendiente }}"
+                                                   step="0.01"
+                                                   value="0"
+                                                   onchange="actualizarTotal()">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Total y validación -->
+                            <div class="mt-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>Total a devolver:</strong> 
+                                        <span id="totalDevolver" class="badge bg-primary ms-2">0</span>
+                                    </div>
+                                    <div>
+                                        <strong>Pendiente después:</strong> 
+                                        <span id="pendienteDespues" class="badge bg-warning ms-2">{{ pendiente }}</span>
+                                    </div>
+                                </div>
+                                <div id="errorTotal" class="text-danger mt-1" style="display: none;">
+                                    <i class="bi bi-exclamation-triangle"></i> 
+                                    El total no puede exceder {{ pendiente }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Condición y observaciones -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Condición al devolver</label>
+                            <textarea class="form-control" name="condicion_devolucion" 
+                                      rows="3" placeholder="Describe el estado en que se devuelven los artículos..."></textarea>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Observaciones</label>
+                            <textarea class="form-control" name="observaciones" 
+                                      rows="2" placeholder="Observaciones adicionales..."></textarea>
+                        </div>
+                        
+                        <!-- Advertencia para dañados/perdidos -->
+                        <div class="alert alert-warning" id="advertencia" style="display: none;">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <strong>¡Atención!</strong> 
+                            Los artículos marcados como <span id="afectados"></span> 
+                            serán <strong>descontados permanentemente</strong> del stock disponible.
+                        </div>
+
+                        <!-- CLAÚSULA DE ACEPTACIÓN MEJORADA -->
+                        <div class="mb-4">
+                            <div class="card border-dark">
+                                <div class="card-header bg-dark text-white">
+                                    <i class="bi bi-file-text me-2"></i>
+                                    <strong>DECLARACIÓN DE RESPONSABILIDAD Y CLÁUSULA LEGAL</strong>
+                                </div>
+                                <div class="card-body">
+                                    <p class="small">
+                                        El receptor declara bajo protesta de decir verdad haber recibido la(s) herramienta(s) 
+                                        descrita(s) en el comprobante de préstamo original, en condiciones físicas y operativas 
+                                        adecuadas para su uso habitual. En este acto de devolución, se consigna el estado de los 
+                                        bienes devueltos conforme a la distribución indicada anteriormente.
+                                    </p>
+                                    <p class="small">
+                                        El receptor reconoce que la(s) herramienta(s) marcada(s) como 
+                                        <strong>“Dañados” o “Perdidos”</strong> serán descontadas permanentemente del inventario 
+                                        y causarán responsabilidad económica a su cargo, equivalente al <strong>costo de reparación 
+                                        certificada</strong> o al <strong>costo de reposición a valor comercial actual</strong>, 
+                                        según determine KEMA CONSTRUCTORA.
+                                    </p>
+                                    <p class="small">
+                                        La presente devolución se realiza en la fecha consignada en el sistema, y el receptor 
+                                        acepta que los datos aquí registrados (cantidades por estado) son fiel reflejo de la 
+                                        condición real de los bienes entregados. Cualquier inconsistencia será resuelta mediante 
+                                        el área administrativa de KEMA CONSTRUCTORA.
+                                    </p>
+                                    
+                                    <!-- Checkbox de aceptación obligatorio -->
+                                    <div class="form-check mt-3">
+                                        <input class="form-check-input" type="checkbox" id="aceptoClausula" required>
+                                        <label class="form-check-label" for="aceptoClausula">
+                                            <strong>He leído y acepto la cláusula de responsabilidad</strong>, reconociendo que los 
+                                            artículos dañados o perdidos serán cobrados según el valor comercial actual.
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Botones -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'prestamos:comprobante_devolucion_prestamo' prestamo.id %}" 
+                                class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="btnSubmit" disabled>
+                                <i class="bi bi-check-circle me-2"></i>Confirmar Devolución
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const pendiente = parseFloat("{{ pendiente }}");
+    const inputs = document.querySelectorAll('input[type="number"]');
+    const totalSpan = document.getElementById('totalDevolver');
+    const pendienteSpan = document.getElementById('pendienteDespues');
+    const errorDiv = document.getElementById('errorTotal');
+    const btnSubmit = document.getElementById('btnSubmit');
+    const advertencia = document.getElementById('advertencia');
+    const afectadosSpan = document.getElementById('afectados');
+    const checkAcepto = document.getElementById('aceptoClausula');
+    
+    function actualizarTotal() {
+        let total = 0;
+        let danados = 0;
+        let perdidos = 0;
+        
+        inputs.forEach(input => {
+            const value = parseFloat(input.value) || 0;
+            total += value;
+            
+            if (input.name === 'danados') danados = value;
+            if (input.name === 'perdidos') perdidos = value;
+        });
+        
+        totalSpan.textContent = total.toFixed(2);
+        pendienteSpan.textContent = (pendiente - total).toFixed(2);
+        
+        // Validar total
+        let totalValido = (total > 0 && total <= pendiente);
+        
+        if (total > pendiente) {
+            errorDiv.style.display = 'block';
+            totalValido = false;
+        } else {
+            errorDiv.style.display = 'none';
+        }
+        
+        // Advertencia para dañados/perdidos
+        const afectados = danados + perdidos;
+        if (afectados > 0) {
+            advertencia.style.display = 'block';
+            let mensaje = [];
+            if (danados > 0) mensaje.push(`${danados} dañado(s)`);
+            if (perdidos > 0) mensaje.push(`${perdidos} perdido(s)`);
+            afectadosSpan.textContent = mensaje.join(' y ');
+        } else {
+            advertencia.style.display = 'none';
+        }
+        
+        // Habilitar submit solo si total es válido y el checkbox está marcado
+        btnSubmit.disabled = !(totalValido && checkAcepto.checked);
+    }
+    
+    inputs.forEach(input => {
+        input.addEventListener('input', actualizarTotal);
+        input.addEventListener('change', actualizarTotal);
+    });
+    
+    checkAcepto.addEventListener('change', actualizarTotal);
+    actualizarTotal();
+});
+</script>
+
+<style>
+    .card.border-dark {
+        border-width: 2px;
+    }
+    .card-header.bg-dark {
+        background-color: #343a40 !important;
+    }
+    .form-check-input:checked {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+</style>
+{% endblock %}

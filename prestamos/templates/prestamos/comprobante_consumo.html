@@ -1,0 +1,244 @@
+<!-- prestamos/templates/prestamos/comprobante_consumo.html -->
+{% extends 'base.html' %}
+
+{% block title %}Comprobante de Consumo #{{ consumo.id }} - Kema Constructora{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow">
+            <div class="card-header bg-danger text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-box-arrow-in-down me-2"></i>COMPROBANTE DE CONSUMO INTERNO
+                    </h4>
+                    <div>
+                        <a href="{% url 'prestamos:comprobante_consumo' consumo.id %}?print=true" 
+                            class="btn btn-primary me-md-2" target="_blank">
+                            <i class="fas fa-print me-2"></i>Imprimir Comprobante
+                        </a>
+                        <a href="{% url 'prestamos:listar_consumos' %}" class="btn btn-light btn-sm ms-2">
+                            <i class="bi bi-list me-1"></i>Ver Todos
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Encabezado -->
+                <div class="text-center mb-4">
+                    <h2 class="text-danger">KEMA CONSTRUCTORA S.A.</h2>
+                    <h4 class="text-muted">COMPROBANTE DE CONSUMO INTERNO</h4>
+                    <p class="mb-0">Sistema de Gestión de Inventario</p>
+                </div>
+                
+                <!-- Información del Consumo -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card border-light">
+                            <div class="card-body">
+                                <h5 class="card-title">Información del Consumo</h5>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <th width="40%">N° Comprobante:</th>
+                                        <td class="fw-bold">CONS-{{ consumo.id|stringformat:"06d" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Fecha Consumo:</th>
+                                        <td>{{ consumo.fecha_consumo|date:"d/m/Y H:i" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Tipo:</th>
+                                        <td><span class="badge bg-danger">{{ consumo.get_tipo_consumo_display }}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Proyecto/Obra:</th>
+                                        <td>{{ consumo.proyecto }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Estado:</th>
+                                        <td>
+                                            {% if consumo.estado == 'activo' %}
+                                                <span class="badge bg-danger">{{ consumo.get_estado_display }}</span>
+                                            {% elif consumo.estado == 'parcial_devuelto' %}
+                                                <span class="badge bg-warning">{{ consumo.get_estado_display }}</span>
+                                            {% else %}
+                                                <span class="badge bg-success">{{ consumo.get_estado_display }}</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-light">
+                            <div class="card-body">
+                                <h5 class="card-title">Responsables</h5>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <th width="40%">Registrado por:</th>
+                                        <td>{{ consumo.registrado_por.get_full_name|default:consumo.registrado_por.username }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Empleado Responsable:</th>
+                                        <td>
+                                            {% if consumo.empleado_responsable %}
+                                                {{ consumo.empleado_responsable.nombre }}<br>
+                                                <small class="text-muted">{{ consumo.empleado_responsable.cedula }}</small>
+                                            {% else %}
+                                                <span class="text-muted">No asignado</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Detalles del Material -->
+                <div class="card border-primary mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Detalles del Material Consumido</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-sm">
+                                    <tr>
+                                        <th width="40%">Herramienta/Material:</th>
+                                        <td>{{ consumo.herramienta.nombre }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Código:</th>
+                                        <td>{{ consumo.herramienta.codigo }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Categoría:</th>
+                                        <td>{{ consumo.herramienta.categoria }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Unidad:</th>
+                                        <td>{{ consumo.herramienta.tipo_unidad }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-sm">
+                                    <tr>
+                                        <th width="60%">Cantidad Consumida:</th>
+                                        <td class="fw-bold text-danger">{{ consumo.cantidad_consumida }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Cantidad Devuelta:</th>
+                                        <td class="fw-bold text-success">{{ consumo.cantidad_devuelta }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Cantidad Actual:</th>
+                                        <td class="fw-bold {% if consumo.cantidad_actual > 0 %}text-danger{% else %}text-success{% endif %}">
+                                            {{ consumo.cantidad_actual }}
+                                        </td>
+                                    </tr>
+                                    {% if consumo.cantidad_devuelta > 0 %}
+                                    <tr>
+                                        <th>Porcentaje Devuelto:</th>
+                                        <td>
+                                            <div class="progress" style="height: 10px;">
+                                                <div class="progress-bar bg-success" 
+                                                    style="width: {{ consumo.porcentaje_devuelto }}%"></div>
+                                            </div>
+                                            <small>{{ consumo.porcentaje_devuelto|floatformat:1 }}%</small>
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Descripción y Observaciones -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card border-light">
+                            <div class="card-body">
+                                <h5 class="card-title">Descripción del Uso</h5>
+                                <p class="card-text">{{ consumo.descripcion|linebreaks }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-light">
+                            <div class="card-body">
+                                <h5 class="card-title">Observaciones</h5>
+                                <p class="card-text">{{ consumo.observaciones|default:"Sin observaciones"|linebreaks }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Devoluciones (si existen) -->
+                {% if devoluciones %}
+                <div class="card border-warning mb-4">
+                    <div class="card-header bg-warning text-white">
+                        <h5 class="mb-0">Historial de Devoluciones</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Cantidad Devuelta</th>
+                                        <th>Motivo</th>
+                                        <th>Devuelto por</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for devolucion in devoluciones %}
+                                    <tr>
+                                        <td>{{ devolucion.fecha_devolucion|date:"d/m/Y H:i" }}</td>
+                                        <td class="text-success fw-bold">{{ devolucion.cantidad_devuelta }}</td>
+                                        <td>{{ devolucion.motivo|truncatewords:10 }}</td>
+                                        <td>{{ devolucion.devuelto_por.get_full_name|default:devolucion.devuelto_por.username }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Botones de acción -->
+                <div class="row mt-4">
+                    <div class="col-md-12 text-center">
+                        {% if consumo.puede_devolver %}
+                        <a href="{% url 'prestamos:devolver_consumo' consumo.id %}" class="btn btn-success me-2">
+                            <i class="bi bi-arrow-return-left me-1"></i>Devolver Consumo
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'prestamos:crear_consumo' %}" class="btn btn-danger me-2">
+                            <i class="bi bi-plus-circle me-1"></i>Nuevo Consumo
+                        </a>
+                        <a href="{% url 'prestamos:listar_consumos' %}" class="btn btn-secondary">
+                            <i class="bi bi-list me-1"></i>Ver Todos los Consumos
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Pie del comprobante -->
+                <div class="text-center mt-4 pt-4 border-top">
+                    <p class="text-muted mb-0">
+                        <strong>Nota:</strong> Este comprobante es un registro interno de consumo de materiales.
+                        Los materiales consumidos NO son retornables, excepto por devolución parcial registrada.
+                    </p>
+                    <small class="text-muted">
+                        Generado el {% now "d/m/Y H:i" %} - Sistema Kema Constructora
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,149 @@
+<!-- prestamos/templates/prestamos/devolver_consumo.html -->
+{% extends 'base.html' %}
+
+{% block title %}Devolver Consumo #{{ consumo.id }} - Kema Constructora{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-arrow-return-left me-2"></i>Devolver Consumo Interno
+                </h4>
+            </div>
+            <div class="card-body">
+                <!-- Resumen del consumo -->
+                <div class="alert alert-info mb-4">
+                    <h5 class="alert-heading">Resumen del Consumo</h5>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Material:</strong> {{ consumo.herramienta.nombre }}<br>
+                            <strong>Proyecto:</strong> {{ consumo.proyecto }}<br>
+                            <strong>Tipo:</strong> {{ consumo.get_tipo_consumo_display }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Consumido:</strong> <span class="text-danger">{{ consumo.cantidad_consumida }}</span><br>
+                            <strong>Devuelto:</strong> <span class="text-success">{{ consumo.cantidad_devuelta }}</span><br>
+                            <strong>Por devolver:</strong> <span class="fw-bold">{{ consumo.cantidad_actual }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulario de devolución -->
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_cantidad_devuelta" class="form-label">
+                                <strong>Cantidad a Devolver *</strong>
+                            </label>
+                            <input type="number" name="cantidad_devuelta" id="id_cantidad_devuelta" 
+                                   class="form-control" step="0.01" min="0.01" max="{{ consumo.cantidad_actual }}"
+                                   required>
+                            <div class="form-text">
+                                Máximo a devolver: <span id="max-devuelta" class="fw-bold">{{ consumo.cantidad_actual }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="mb-3">
+                                <label class="form-label"><strong>Fecha de Devolución</strong></label>
+                                <input type="text" class="form-control" value="{% now 'd/m/Y H:i' %}" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="id_motivo" class="form-label">
+                                <strong>Motivo de la Devolución *</strong>
+                            </label>
+                            <textarea name="motivo" id="id_motivo" class="form-control" rows="3" required
+                                      placeholder="Ej: Material sobrante, error en la cantidad, cambio de proyecto..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="id_observaciones" class="form-label">
+                                <strong>Observaciones</strong>
+                            </label>
+                            <textarea name="observaciones" id="id_observaciones" 
+                                     class="form-control" rows="2"
+                                     placeholder="Observaciones adicionales..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Nota:</strong> Esta devolución aumentará el stock disponible del material.
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-success me-2">
+                            <i class="bi bi-check-circle me-1"></i>Confirmar Devolución
+                        </button>
+                        <a href="{% url 'prestamos:comprobante_consumo' consumo.id %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-1"></i>Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cantidadInput = document.getElementById('id_cantidad_devuelta');
+    const maxDevueltaSpan = document.getElementById('max-devuelta');
+    const maxValue = parseFloat(maxDevueltaSpan.textContent);
+    
+    if (cantidadInput) {
+        // Validar cantidad en tiempo real
+        cantidadInput.addEventListener('input', function() {
+            const cantidad = parseFloat(this.value) || 0;
+            
+            if (cantidad > maxValue) {
+                this.classList.add('is-invalid');
+                this.value = maxValue;
+                alert(`No puede devolver más de ${maxValue}`);
+            } else if (cantidad <= 0) {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
+            }
+        });
+        
+        // Validar antes de enviar
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            const cantidad = parseFloat(cantidadInput.value) || 0;
+            
+            if (cantidad <= 0) {
+                e.preventDefault();
+                alert('La cantidad a devolver debe ser mayor que 0');
+                cantidadInput.focus();
+                return false;
+            }
+            
+            if (cantidad > maxValue) {
+                e.preventDefault();
+                alert(`No puede devolver más de ${maxValue}`);
+                cantidadInput.focus();
+                return false;
+            }
+            
+            if (!confirm('¿Está seguro de realizar esta devolución?')) {
+                e.preventDefault();
+                return false;
+            }
+            
+            return true;
+        });
+    }
+});
+</script>
+{% endblock %}

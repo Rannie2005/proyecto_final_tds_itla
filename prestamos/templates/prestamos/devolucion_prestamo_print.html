@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprobante de Devolución #{{ prestamo.id }} - Kema Constructora</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 21cm;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 20px;
+            margin: 0;
+            font-weight: bold;
+            color: #1a1a1a;
+        }
+        .header h2 {
+            font-size: 16px;
+            margin: 5px 0;
+            font-weight: bold;
+            color: #333;
+        }
+        .header h3 {
+            font-size: 14px;
+            margin: 0;
+            color: #555;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-weight: bold;
+            font-size: 14px;
+            background-color: #f0f0f0;
+            padding: 8px;
+            border-left: 4px solid #0d6efd;
+            margin-bottom: 10px;
+        }
+        .row {
+            display: flex;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+        .col-6 {
+            flex: 0 0 50%;
+        }
+        .col-4 {
+            flex: 0 0 33.333%;
+        }
+        .col-3 {
+            flex: 0 0 25%;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .table th, .table td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: left;
+        }
+        .table th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+        .signature-section {
+            margin-top: 40px;
+            border-top: 1px solid #000;
+            padding-top: 20px;
+        }
+        .signature-box {
+            display: inline-block;
+            width: 45%;
+            text-align: center;
+            margin: 0 2.5%;
+        }
+        .signature-line {
+            border-bottom: 1px solid #000;
+            height: 50px;
+            margin-bottom: 5px;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 10px;
+            border-top: 1px solid #000;
+            padding-top: 10px;
+        }
+        .badge {
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: bold;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        .badge-success { background-color: #28a745; color: white; }
+        .badge-warning { background-color: #ffc107; color: #000; }
+        .badge-danger { background-color: #dc3545; color: white; }
+        .badge-info { background-color: #17a2b8; color: white; }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .text-left { text-align: left; }
+        .mb-1 { margin-bottom: 5px; }
+        .mb-2 { margin-bottom: 10px; }
+        .mb-3 { margin-bottom: 15px; }
+        .mt-3 { margin-top: 15px; }
+        .p-2 { padding: 8px; }
+        .border { border: 1px solid #ddd; }
+        .border-bottom { border-bottom: 1px solid #000; }
+        .bg-light { background-color: #f8f9fa; }
+        .clausula-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid #dc3545;
+            padding: 12px;
+            margin: 15px 0;
+            font-size: 11px;
+        }
+        .clausula-box-warning {
+            border-left-color: #ffc107;
+        }
+        .clausula-box-success {
+            border-left-color: #28a745;
+        }
+        table tr td {
+            padding: 5px;
+        }
+        .resumen-cantidades {
+            background-color: #f8f9fa;
+            padding: 10px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Encabezado -->
+        <div class="header">
+            <h1>KEMA CONSTRUCTORA</h1>
+            <h2>COMPROBANTE DE DEVOLUCIÓN</h2>
+            <h3>N° {{ prestamo.id|stringformat:"06d" }}</h3>
+            <div class="row">
+                <div class="col-6 text-center">
+                    <strong>Fecha de Devolución:</strong> {{ prestamo.fecha_devolucion_real|date:"d/m/Y H:i"|default:fecha_hoy|date:"d/m/Y H:i" }}
+                </div>
+                <div class="col-6 text-center">
+                    <strong>Fecha Préstamo Original:</strong> {{ prestamo.fecha_prestamo|date:"d/m/Y H:i" }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Información General -->
+        <div class="section">
+            <div class="section-title">INFORMACIÓN DEL PRÉSTAMO ORIGINAL</div>
+            <div class="row">
+                <div class="col-6">
+                    <strong>Herramienta:</strong> {{ prestamo.herramienta.nombre }}
+                </div>
+                <div class="col-6">
+                    <strong>Código:</strong> {{ prestamo.herramienta.codigo }}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-6">
+                    <strong>Cantidad Prestada:</strong> {{ prestamo.cantidad_prestada }} {{ prestamo.herramienta.tipo_unidad.abreviatura }}
+                </div>
+                <div class="col-6">
+                    <strong>Receptor:</strong> {{ prestamo.quien_recibe }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Detalle de Devolución -->
+        <div class="section">
+            <div class="section-title">DETALLE DE LA DEVOLUCIÓN</div>
+            <div class="resumen-cantidades">
+                <div class="row">
+                    <div class="col-3 text-center">
+                        <strong>✓ Buen Estado</strong><br>
+                        <span style="font-size: 24px; font-weight: bold;">{{ prestamo.cantidad_devuelta_buen_estado }}</span>
+                        <br><small>{{ prestamo.herramienta.tipo_unidad.abreviatura }}</small>
+                    </div>
+                    <div class="col-3 text-center">
+                        <strong>⚠ Dañados</strong><br>
+                        <span style="font-size: 24px; font-weight: bold; color: #856404;">{{ prestamo.cantidad_devuelta_danada }}</span>
+                        <br><small>{{ prestamo.herramienta.tipo_unidad.abreviatura }}</small>
+                    </div>
+                    <div class="col-3 text-center">
+                        <strong>✗ Perdidos</strong><br>
+                        <span style="font-size: 24px; font-weight: bold; color: #721c24;">{{ prestamo.cantidad_devuelta_perdida }}</span>
+                        <br><small>{{ prestamo.herramienta.tipo_unidad.abreviatura }}</small>
+                    </div>
+                    <div class="col-3 text-center">
+                        <strong>Total Devuelto</strong><br>
+                        <span style="font-size: 24px; font-weight: bold;">{{ prestamo.cantidad_total_devuelta }}</span>
+                        <br><small>{{ prestamo.herramienta.tipo_unidad.abreviatura }}</small>
+                    </div>
+                </div>
+                {% if prestamo.pendiente_por_devolver > 0 %}
+                <div class="text-center mt-2">
+                    <span class="badge badge-warning">⚠ Pendiente por devolver: {{ prestamo.pendiente_por_devolver }} {{ prestamo.herramienta.tipo_unidad.abreviatura }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Condición de Devolución -->
+        {% if prestamo.condicion_devolucion %}
+        <div class="section">
+            <div class="section-title">CONDICIÓN REPORTADA</div>
+            <p>{{ prestamo.condicion_devolucion }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Observaciones -->
+        {% if prestamo.observaciones %}
+        <div class="section">
+            <div class="section-title">OBSERVACIONES</div>
+            <p>{{ prestamo.observaciones }}</p>
+        </div>
+        {% endif %}
+
+        <!-- ============================================ -->
+        <!-- CLÁUSULA DINÁMICA SEGÚN ESTADO DE DEVOLUCIÓN -->
+        <!-- ============================================ -->
+        <div class="section">
+            <div class="section-title">DECLARACIÓN DE RESPONSABILIDAD</div>
+            
+            {% if clausula_tipo == 'buen_estado' %}
+            <!-- Clausula cuando TODO se devuelve en buen estado -->
+            <div class="clausula-box clausula-box-success">
+                <strong>✓ DEVOLUCIÓN EN BUEN ESTADO</strong><br><br>
+                El receptor, {{ prestamo.quien_recibe }}, declara bajo protesta de decir verdad que ha recibido la(s) herramienta(s) 
+                descrita(s) en el comprobante de préstamo original en <strong>condiciones físicas y operativas adecuadas</strong>.
+                <br><br>
+                En el presente acto, el receptor <strong>devuelve la totalidad de las {{ prestamo.cantidad_total_devuelta }} 
+                {{ prestamo.herramienta.tipo_unidad.abreviatura }} en BUEN ESTADO</strong>, sin daños, pérdidas ni desgaste anormal, 
+                quedando conforme con la recepción por parte de KEMA CONSTRUCTORA.
+                <br><br>
+                <strong>El receptor libera toda responsabilidad sobre las herramientas devueltas en este acto.</strong>
+                {% if tiene_pendiente %}
+                <br><br>
+                <span class="badge badge-warning">NOTA:</span> Queda pendiente por devolver {{ prestamo.pendiente_por_devolver }} 
+                {{ prestamo.herramienta.tipo_unidad.abreviatura }}, las cuales deberán ser entregadas en una fecha posterior.
+                {% endif %}
+            </div>
+            
+            {% elif clausula_tipo == 'con_danos' %}
+            <!-- Clausula cuando hay DAÑADOS o PERDIDOS -->
+            <div class="clausula-box">
+                <strong>⚠ DEVOLUCIÓN CON DAÑOS / PÉRDIDAS - RESPONSABILIDAD ECONÓMICA</strong><br><br>
+                El receptor, {{ prestamo.quien_recibe }}, declara bajo protesta de decir verdad:
+                <br><br>
+                1. Que recibió la(s) herramienta(s) en <strong>condiciones óptimas para su uso</strong> según consta en el comprobante de préstamo original.
+                <br><br>
+                2. En el presente acto de devolución, se consigna que:
+                <ul style="margin-top: 5px; margin-bottom: 5px;">
+                    <li><strong>{{ prestamo.cantidad_devuelta_buen_estado }} unidades</strong> se devuelven en BUEN ESTADO</li>
+                    {% if tiene_danados %}
+                    <li><strong>{{ prestamo.cantidad_devuelta_danada }} unidades</strong> se devuelven en estado DAÑADO</li>
+                    {% endif %}
+                    {% if tiene_perdidos %}
+                    <li><strong>{{ prestamo.cantidad_devuelta_perdida }} unidades</strong> se reportan como PERDIDAS</li>
+                    {% endif %}
+                </ul>
+                <br>
+                3. El receptor <strong>ACEPTA SU RESPONSABILIDAD ECONÓMICA</strong> por las unidades dañadas y/o perdidas, obligándose a:
+                <ul style="margin-top: 5px; margin-bottom: 5px;">
+                    <li>Cubrir el <strong>COSTO DE REPARACIÓN CERTIFICADA</strong> para las unidades dañadas</li>
+                    <li>Cubrir el <strong>COSTO DE REPOSICIÓN A VALOR COMERCIAL ACTUAL</strong> para las unidades perdidas</li>
+                </ul>
+                <br>
+                4. Las unidades dañadas y perdidas (<strong>{{ prestamo.cantidad_a_descontar }} unidades</strong>) serán 
+                <strong>DESCONTADAS PERMANENTEMENTE DEL INVENTARIO</strong> de KEMA CONSTRUCTORA.
+                <br><br>
+                5. El receptor autoriza a KEMA CONSTRUCTORA a realizar el cobro correspondiente mediante:
+                <ul style="margin-top: 5px; margin-bottom: 5px;">
+                    <li>Descuento de nómina (si es empleado)</li>
+                    <li>Facturación directa (si es cliente externo)</li>
+                    <li>Otros medios legales establecidos</li>
+                </ul>
+                {% if tiene_pendiente %}
+                <br>
+                <span class="badge badge-warning">NOTA:</span> Queda pendiente por devolver {{ prestamo.pendiente_por_devolver }} 
+                {{ prestamo.herramienta.tipo_unidad.abreviatura }}, las cuales deberán ser entregadas en una fecha posterior 
+                y están sujetas a la misma cláusula de responsabilidad.
+                {% endif %}
+            </div>
+            
+            {% else %}
+            <!-- Clausula mixta o por defecto -->
+            <div class="clausula-box clausula-box-warning">
+                <strong>📋 REGISTRO DE DEVOLUCIÓN MIXTA</strong><br><br>
+                El receptor, {{ prestamo.quien_recibe }}, declara que en el presente acto devuelve:
+                <ul>
+                    <li><strong>{{ prestamo.cantidad_devuelta_buen_estado }} unidades en BUEN ESTADO</strong></li>
+                    {% if prestamo.cantidad_devuelta_danada > 0 %}
+                    <li><strong>{{ prestamo.cantidad_devuelta_danada }} unidades DAÑADAS</strong></li>
+                    {% endif %}
+                    {% if prestamo.cantidad_devuelta_perdida > 0 %}
+                    <li><strong>{{ prestamo.cantidad_devuelta_perdida }} unidades PERDIDAS</strong></li>
+                    {% endif %}
+                </ul>
+                {% if prestamo.cantidad_devuelta_danada > 0 or prestamo.cantidad_devuelta_perdida > 0 %}
+                El receptor reconoce su <strong>responsabilidad económica</strong> por las unidades dañadas y/o perdidas, 
+                comprometiéndose a cubrir los costos de reparación o reposición según determine KEMA CONSTRUCTORA.
+                {% else %}
+                El receptor queda conforme con la recepción de las herramientas devueltas en buen estado.
+                {% endif %}
+                {% if tiene_pendiente %}
+                <br><br>
+                <strong>Pendiente:</strong> {{ prestamo.pendiente_por_devolver }} {{ prestamo.herramienta.tipo_unidad.abreviatura }} por devolver.
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Firmas -->
+        <div class="signature-section">
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <strong>PRESTADOR (KEMA CONSTRUCTORA)</strong><br>
+                {{ prestamo.prestado_por.get_full_name|default:prestamo.prestado_por.username }}
+            </div>
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <strong>RECEPTOR (DEVUELVE)</strong><br>
+                {{ prestamo.quien_recibe }}
+            </div>
+        </div>
+
+        <!-- Sello de recibido -->
+        <div class="row mt-3">
+            <div class="col-12 text-center">
+                <div class="border p-2 bg-light">
+                    <strong>🕒 FECHA Y HORA DE RECEPCIÓN:</strong> 
+                    {% now "d/m/Y H:i:s" %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Pie de página -->
+        <div class="footer">
+            <strong>KEMA CONSTRUCTORA - Sistema de Gestión de Almacén</strong><br>
+            Comprobante de devolución generado el {% now "d/m/Y H:i" %}<br>
+            Este documento tiene validez como constancia de devolución y, en caso de daños/pérdidas, como título ejecutivo para el cobro correspondiente.
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            window.print();
+            setTimeout(function() {
+                window.close();
+            }, 1500);
+        }
+    </script>
+</body>
+</html>

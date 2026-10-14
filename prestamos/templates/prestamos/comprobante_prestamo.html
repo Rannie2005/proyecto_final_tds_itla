@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Comprobante de Préstamo #{{ prestamo.id }} - Kema Constructora{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card card-custom shadow border-0">
+            <div class="card-header bg-{% if prestamo.estado == 'devuelto' %}success{% else %}primary{% endif %} text-white py-3">
+                <div class="text-center">
+                    <h2 class="mb-0">
+                        <i class="fas fa-{% if prestamo.estado == 'devuelto' %}check-circle{% else %}file-invoice{% endif %} me-2"></i>
+                        {% if prestamo.estado == 'devuelto' %}Préstamo Devuelto Exitosamente{% else %}Préstamo Registrado Exitosamente{% endif %}
+                    </h2>
+                </div>
+            </div>
+            <div class="card-body">
+                
+                {% if from_form %}
+                <div class="alert alert-{% if prestamo.estado == 'devuelto' %}success{% else %}primary{% endif %} alert-dismissible fade show">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>¡Éxito!</strong> 
+                    {% if prestamo.estado == 'devuelto' %}
+                        La devolución ha sido registrada correctamente.
+                    {% else %}
+                        El préstamo ha sido registrado correctamente.
+                    {% endif %}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endif %}
+
+                <!-- Encabezado -->
+                <div class="text-center mb-4">
+                    <h3 class="text-primary">KEMA CONSTRUCTORA</h3>
+                    <p class="text-muted">Sistema de Gestión de Almacén</p>
+                    <h4 class="border-top border-bottom py-2">COMPROBANTE DE PRÉSTAMO</h4>
+                </div>
+
+                <!-- Información del Comprobante -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title">Información del Comprobante</h6>
+                                <p class="mb-1"><strong>N° Comprobante:</strong> {{ prestamo.id|stringformat:"06d" }}</p>
+                                <p class="mb-1"><strong>Fecha Préstamo:</strong> {{ prestamo.fecha_prestamo|date:"d/m/Y H:i" }}</p>
+                                <p class="mb-0"><strong>Estado:</strong> 
+                                    <span class="badge 
+                                        {% if prestamo.estado == 'activo' %}bg-warning
+                                        {% elif prestamo.estado == 'devuelto' %}bg-success
+                                        {% elif prestamo.estado == 'vencido' %}bg-danger
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ prestamo.get_estado_display }}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title">Información del Prestador</h6>
+                                <p class="mb-1"><strong>Prestado por:</strong> {{ prestamo.prestado_por.get_full_name|default:prestamo.prestado_por.username }}</p>
+                                <p class="mb-0"><strong>Usuario:</strong> {{ prestamo.prestado_por.username }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumen del Préstamo -->
+                <div class="card mb-4 border-{% if prestamo.estado == 'devuelto' %}success{% else %}primary{% endif %}">
+                    <div class="card-header bg-{% if prestamo.estado == 'devuelto' %}success{% else %}primary{% endif %} text-white">
+                        <h6 class="mb-0">Resumen del Préstamo</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <h5 class="text-muted mb-1">PRESTADO</h5>
+                                <h3 class="text-primary">{{ prestamo.cantidad_prestada }}</h3>
+                                <small class="text-muted">{{ prestamo.herramienta.tipo_unidad.abreviatura }}</small>
+                                <p class="small mb-0 mt-2">{{ prestamo.fecha_prestamo|date:"d/m/Y" }}</p>
+                            </div>
+                            <div class="col-md-3">
+                                <h5 class="text-muted mb-1">PENDIENTE</h5>
+                                <h3 class="text-{% if prestamo.estado == 'devuelto' %}success{% else %}warning{% endif %}">
+                                    {{ prestamo.pendiente_por_devolver }}
+                                </h3>
+                                <small class="text-muted">{{ prestamo.herramienta.tipo_unidad.abreviatura }}</small>
+                                <p class="small mb-0 mt-2">
+                                    <span class="badge bg-{% if prestamo.estado == 'devuelto' %}success{% else %}warning{% endif %}">
+                                        {{ prestamo.get_estado_display|upper }}
+                                    </span>
+                                </p>
+                            </div>
+                            <div class="col-md-3">
+                                <h5 class="text-muted mb-1">DEV. ESTIMADA</h5>
+                                <h4 class="{% if prestamo.esta_vencido %}text-danger{% else %}text-success{% endif %}">
+                                    {{ prestamo.fecha_devolucion_estimada|date:"d/m/Y" }}
+                                </h4>
+                                {% if prestamo.esta_vencido %}
+                                <span class="badge bg-danger mt-2">VENCIDO</span>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3">
+                                <h5 class="text-muted mb-1">CÓDIGO</h5>
+                                <h4 class="text-info">{{ prestamo.herramienta.codigo }}</h4>
+                                <small class="text-muted">Herramienta</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Herramienta Prestada -->
+                <div class="card mb-4">
+                    <div class="card-header bg-secondary text-white">
+                        <h6 class="mb-0">Herramienta Prestada</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Herramienta:</strong> {{ prestamo.herramienta.nombre }}</p>
+                                <p class="mb-1"><strong>Categoría:</strong> {{ prestamo.herramienta.categoria.nombre }}</p>
+                                <p class="mb-0"><strong>Descripción:</strong> {{ prestamo.herramienta.descripcion|default:"Sin descripción"|truncatechars:50 }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Cantidad Prestada:</strong> {{ prestamo.cantidad_prestada }} {{ prestamo.herramienta.tipo_unidad.abreviatura }}</p>
+                                <p class="mb-1"><strong>Stock Actual:</strong> {{ prestamo.herramienta.stock_actual }} {{ prestamo.herramienta.tipo_unidad.abreviatura }}</p>
+                                <p class="mb-0"><strong>Stock Disponible:</strong> 
+                                    <span class="badge 
+                                        {% if prestamo.herramienta.stock_disponible < prestamo.herramienta.stock_minimo %}
+                                            bg-danger
+                                        {% else %}
+                                            bg-success
+                                        {% endif %}">
+                                        {{ prestamo.herramienta.stock_disponible }}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información del Receptor -->
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">Información del Receptor</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Nombre:</strong>
+                                    {% if prestamo.empleado %}
+                                        {{ prestamo.empleado.nombre_completo|default:prestamo.empleado.nombre }}
+                                    {% else %}
+                                        {{ prestamo.cliente_externo }}
+                                    {% endif %}
+                                </p>
+                                <p class="mb-0"><strong>Identificación:</strong>
+                                    {% if prestamo.empleado %}
+                                        {{ prestamo.empleado.cedula|default:"No especificada" }}
+                                    {% else %}
+                                        {{ prestamo.cedula_externo|default:"No especificada" }}
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Tipo:</strong>
+                                    {% if prestamo.empleado %}
+                                        <span class="badge bg-primary">Empleado</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">Cliente Externo</span>
+                                    {% endif %}
+                                </p>
+                                <p class="mb-0"><strong>Devolución Estimada:</strong> {{ prestamo.fecha_devolucion_estimada|date:"d/m/Y" }}
+                                    {% if prestamo.esta_vencido and prestamo.estado == 'activo' %}
+                                        <span class="badge bg-danger ms-2">VENCIDO</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ✅ CORREGIR BOTÓN: SIN abrir nueva pestaña -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                            <!-- ✅ SIN '_blank': se abre en la misma ventana -->
+                            <a href="{% url 'prestamos:comprobante_prestamo' prestamo.id %}?print=true" 
+                               class="btn btn-primary me-md-2">
+                                <i class="fas fa-print me-2"></i>Imprimir Comprobante
+                            </a>
+                            
+                            <a href="{% url 'prestamos:descargar_pdf_prestamo' prestamo.id %}" 
+                               class="btn btn-success me-md-2">
+                                <i class="fas fa-file-pdf me-2"></i>Descargar PDF
+                            </a>
+                            
+                            {% if prestamo.estado == 'activo' %}
+                            <a href="{% url 'prestamos:devolver_prestamo' prestamo.id %}" 
+                                class="btn btn-warning me-md-2">
+                                <i class="fas fa-undo me-2"></i>Registrar Devolución
+                            </a>
+                            {% endif %}
+                            
+                            <a href="{% url 'prestamos:listar_prestamos' %}" class="btn btn-info me-md-2">
+                                <i class="fas fa-list me-2"></i>Ver Todos los Préstamos
+                            </a>
+                            
+                            <a href="{% url 'prestamos:crear_prestamo' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-plus-circle me-2"></i>Nuevo Préstamo
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información Adicional -->
+                <div class="alert alert-info mt-4">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Nota:</strong> Este comprobante sirve como constancia del préstamo realizado. 
+                    Las devoluciones en buen estado regresan al stock disponible, mientras que las dañadas o perdidas 
+                    se descuentan permanentemente del inventario.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

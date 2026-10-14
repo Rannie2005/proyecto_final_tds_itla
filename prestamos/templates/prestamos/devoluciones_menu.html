@@ -1,0 +1,419 @@
+<!-- prestamos/templates/prestamos/devoluciones_menu.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title|default:"Menú de Devoluciones" }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-header mb-4">
+                <h1 class="display-6">
+                    <i class="bi bi-arrow-left-right me-2"></i> Sistema de Devoluciones
+                </h1>
+                <p class="lead text-muted">
+                    Gestiona las devoluciones de préstamos y consumos internos
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tarjetas de Opciones -->
+    <div class="row">
+        <!-- Préstamos -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-handshake me-2"></i> Devolución de Préstamos
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title">Préstamos Activos</h5>
+                        <span class="badge bg-primary fs-6">{{ total_prestamos_activos }}</span>
+                    </div>
+                    
+                    <p class="card-text">
+                        Registra la devolución de herramientas prestadas a clientes o empleados.
+                        Verifica el estado de la herramienta y completa el proceso.
+                    </p>
+                    
+                    {% if prestamos_pendientes %}
+                        <div class="alert alert-warning">
+                            <h6>
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                Préstamos con devolución atrasada:
+                            </h6>
+                            <ul class="mb-0">
+                                {% for prestamo in prestamos_pendientes|slice:":3" %}
+                                <li>
+                                    {{ prestamo.herramienta.nombre }} - 
+                                    {{ prestamo.cliente }} (Vence: {{ prestamo.fecha_devolucion_estimada|date:"d/m/Y" }})
+                                </li>
+                                {% endfor %}
+                                {% if prestamos_pendientes.count > 3 %}
+                                    <li class="text-muted">... y {{ prestamos_pendientes.count|add:"-3" }} más</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="mt-4">
+                        <a href="{% url 'prestamos:listar_prestamos' %}?estado=activo" 
+                           class="btn btn-outline-primary me-2">
+                            <i class="bi bi-list me-1"></i> Ver Préstamos Activos
+                        </a>
+                        <a href="{% url 'prestamos:dashboard_devoluciones' %}" 
+                           class="btn btn-primary">
+                            <i class="bi bi-speedometer me-1"></i> Ir al Dashboard
+                        </a>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <small class="text-muted">
+                        <i class="bi bi-clock me-1"></i>
+                        Última devolución: {% now "d/m/Y H:i" %}
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Consumos -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="bi bi-fire me-2"></i> Devolución de Consumos
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title">Consumos Pendientes</h5>
+                        <span class="badge bg-warning text-dark fs-6">{{ total_consumos_activos }}</span>
+                    </div>
+                    
+                    <p class="card-text">
+                        Registra devoluciones de materiales sobrantes de consumos internos.
+                        Controla el inventario y optimiza recursos.
+                    </p>
+                    
+                    {% if consumos_pendientes %}
+                        <div class="alert alert-info">
+                            <h6>
+                                <i class="bi bi-info-circle me-2"></i>
+                                Consumos con material pendiente:
+                            </h6>
+                            <ul class="mb-0">
+                                {% for consumo in consumos_pendientes|slice:":3" %}
+                                <li>
+                                    {{ consumo.herramienta.nombre }} - 
+                                    {{ consumo.proyecto }} (Quedan: {{ consumo.cantidad_actual }})
+                                </li>
+                                {% endfor %}
+                                {% if consumos_pendientes.count > 3 %}
+                                    <li class="text-muted">... y {{ consumos_pendientes.count|add:"-3" }} más</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="mt-4">
+                        <a href="{% url 'prestamos:listar_consumos' %}?estado=activo" 
+                           class="btn btn-outline-warning me-2">
+                            <i class="bi bi-list me-1"></i> Ver Consumos Pendientes
+                        </a>
+                        <a href="{% url 'prestamos:crear_consumo' %}" 
+                           class="btn btn-warning">
+                            <i class="bi bi-plus-circle me-1"></i> Nuevo Consumo
+                        </a>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <small class="text-muted">
+                        <i class="bi bi-recycle me-1"></i>
+                        Material sobrante puede ser reutilizado
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Acciones Rápidas -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-lightning me-2"></i> Acciones Rápidas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'prestamos:estadisticas_generales' %}" 
+                               class="btn btn-outline-info w-100 h-100 py-3">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="bi bi-graph-up fa-2x mb-2"></i>
+                                    <span>Estadísticas</span>
+                                </div>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'prestamos:reporte_semanal' %}" 
+                               class="btn btn-outline-success w-100 h-100 py-3">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="bi bi-file-text fa-2x mb-2"></i>
+                                    <span>Reporte Mensual</span>
+                                </div>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'prestamos:reporte_semanal_consumos' %}" 
+                               class="btn btn-outline-primary w-100 h-100 py-3">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="bi bi-bar-chart fa-2x mb-2"></i>
+                                    <span>Reporte Semanal</span>
+                                </div>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <a href="/admin/prestamos/" 
+                               class="btn btn-outline-secondary w-100 h-100 py-3">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="bi bi-gear fa-2x mb-2"></i>
+                                    <span>Administrar</span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Información Útil -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-question-circle me-2"></i> ¿Cuándo registrar devolución?
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            Cuando el cliente devuelve la herramienta prestada
+                        </li>
+                        <li class="list-group-item">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            Cuando hay material sobrante de un proyecto
+                        </li>
+                        <li class="list-group-item">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            Cuando se cancela un préstamo o consumo
+                        </li>
+                        <li class="list-group-item">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            Para ajustes de inventario
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-lightbulb me-2"></i> Beneficios
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <i class="bi bi-star text-warning me-2"></i>
+                            Control preciso del inventario
+                        </li>
+                        <li class="list-group-item">
+                            <i class="bi bi-star text-warning me-2"></i>
+                            Reducción de pérdidas y mermas
+                        </li>
+                        <li class="list-group-item">
+                            <i class="bi bi-star text-warning me-2"></i>
+                            Mejor seguimiento de materiales
+                        </li>
+                        <li class="list-group-item">
+                            <i class="bi bi-star text-warning me-2"></i>
+                            Optimización de recursos
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enlaces de Navegación -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-compass me-2"></i> Navegación Rápida
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="list-group">
+                                <a href="{% url 'prestamos:listar_prestamos' %}" class="list-group-item list-group-item-action">
+                                    <i class="bi bi-arrow-up-circle me-2 text-primary"></i>
+                                    Todos los Préstamos
+                                </a>
+                                <a href="{% url 'prestamos:listar_prestamos' %}?estado=activo" class="list-group-item list-group-item-action">
+                                    <i class="bi bi-clock me-2 text-warning"></i>
+                                    Préstamos Activos
+                                </a>
+                                <a href="{% url 'prestamos:listar_prestamos' %}?estado=devuelto" class="list-group-item list-group-item-action">
+                                    <i class="bi bi-check-circle me-2 text-success"></i>
+                                    Préstamos Devueltos
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="list-group">
+                                <a href="{% url 'prestamos:listar_consumos' %}" class="list-group-item list-group-item-action">
+                                    <i class="bi bi-fire me-2 text-orange"></i>
+                                    Todos los Consumos
+                                </a>
+                                <a href="{% url 'prestamos:listar_consumos' %}?estado=activo" class="list-group-item list-group-item-action">
+                                    <i class="bi bi-hourglass me-2 text-warning"></i>
+                                    Consumos Pendientes
+                                </a>
+                                <a href="{% url 'prestamos:listar_consumos' %}?estado=completado" class="list-group-item list-group-item-action">
+                                    <i class="bi bi-check2-all me-2 text-success"></i>
+                                    Consumos Completados
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="list-group">
+                                <a href="{% url 'prestamos:dashboard_devoluciones' %}" class="list-group-item list-group-item-action">
+                                    <i class="bi bi-speedometer me-2 text-danger"></i>
+                                    Dashboard Devoluciones
+                                </a>
+                                <a href="{% url 'usuarios:tablero' %}" class="list-group-item list-group-item-action">
+                                    <i class="bi bi-house me-2 text-primary"></i>
+                                    Volver al Inicio
+                                </a>
+                                <a href="/admin/" class="list-group-item list-group-item-action">
+                                    <i class="bi bi-gear me-2 text-secondary"></i>
+                                    Panel de Administración
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .card-header {
+        border-radius: 10px 10px 0 0 !important;
+    }
+    
+    .list-group-item {
+        border-left: none;
+        border-right: none;
+        padding: 0.75rem 0;
+    }
+    
+    .list-group-item:first-child {
+        border-top: none;
+    }
+    
+    .list-group-item:last-child {
+        border-bottom: none;
+    }
+    
+    .badge {
+        font-size: 0.85em;
+        padding: 5px 10px;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-weight: 500;
+    }
+    
+    .page-header {
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    /* Colores personalizados */
+    .text-orange {
+        color: #fd7e14;
+    }
+    
+    .border-orange {
+        border-color: #fd7e14 !important;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicializar tooltips de Bootstrap
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+        
+        // Actualizar contador de tiempo
+        function actualizarTiempo() {
+            const ahora = new Date();
+            const horas = ahora.getHours().toString().padStart(2, '0');
+            const minutos = ahora.getMinutes().toString().padStart(2, '0');
+            
+            // Puedes mostrar la hora en algún elemento si lo deseas
+            // document.getElementById('hora-actual').textContent = `${horas}:${minutos}`;
+        }
+        
+        // Actualizar cada minuto
+        setInterval(actualizarTiempo, 60000);
+        actualizarTiempo();
+        
+        // Resaltar tarjetas al pasar el mouse
+        const cards = document.querySelectorAll('.card');
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+            });
+        });
+    });
+</script>
+{% endblock %}
+<!-- FIN DEL ARCHIVO -->

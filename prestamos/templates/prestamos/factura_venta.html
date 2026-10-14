@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block title %}Factura de Venta - Kema Constructora{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card card-custom shadow border-0">
+            <div class="card-header bg-success text-white py-3">
+                <div class="text-center">
+                    <h2 class="mb-0"><i class="bi bi-check-circle me-2"></i>Venta Registrada Exitosamente</h2>
+                </div>
+            </div>
+            <div class="card-body">
+                
+                {% if from_form %}
+                <div class="alert alert-success alert-dismissible fade show">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <strong>¡Éxito!</strong> La venta ha sido registrada correctamente.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endif %}
+
+                <!-- Encabezado -->
+                <div class="text-center mb-4">
+                    <img src="/prestamos/static/logo.png" alt="Kema Constructora" class="logo mb-3" style="height: 80px;">
+                    <h3 class="text-primary">KEMA CONSTRUCTORA</h3>
+                    <p class="text-muted">Sistema de Gestión de Almacén</p>
+                    <h4 class="border-top border-bottom py-2">FACTURA DE VENTA</h4>
+                </div>
+
+                <!-- Información de la Factura -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title">Información de la Factura</h6>
+                                <p class="mb-1"><strong>N° Factura:</strong> {{ venta.numero_factura }}</p>
+                                <p class="mb-1"><strong>Fecha:</strong> {{ venta.fecha_venta|date:"d/m/Y H:i" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title">Información del Vendedor</h6>
+                                <p class="mb-1"><strong>Vendedor:</strong> {{ venta.vendedor.get_full_name|default:venta.vendedor.username }}</p>
+                                <p class="mb-1"><strong>Usuario:</strong> {{ venta.vendedor.username }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Producto Vendido -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0">Producto Vendido</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Herramienta:</strong> {{ venta.herramienta.nombre }}</p>
+                                <p class="mb-1"><strong>Código:</strong> {{ venta.herramienta.codigo }}</p>
+                                <p class="mb-1"><strong>Categoría:</strong> {{ venta.herramienta.categoria }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Cantidad:</strong> {{ venta.cantidad_vendida }}</p>
+                                <p class="mb-1"><strong>Unidad:</strong> {{ venta.herramienta.tipo_unidad.abreviatura }}</p>
+                                <p class="mb-1"><strong>Precio Unitario:</strong> RD$ {{ venta.precio_unitario }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información del Cliente -->
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">Información del Cliente</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Nombre:</strong> {{ venta.cliente_nombre }}</p>
+                                <p class="mb-1"><strong>Cédula:</strong> {{ venta.cliente_cedula|default:"No especificada" }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Teléfono:</strong> {{ venta.cliente_telefono|default:"No especificado" }}</p>
+                                <p class="mb-1"><strong>Fecha de Venta:</strong> {{ venta.fecha_venta|date:"d/m/Y" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumen de Pago -->
+                <div class="card mb-4">
+                    <div class="card-header bg-warning text-dark">
+                        <h6 class="mb-0">Resumen de Pago</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <h5 class="text-muted mb-1">Cantidad</h5>
+                                <h4 class="text-primary">{{ venta.cantidad_vendida }}</h4>
+                            </div>
+                            <div class="col-4">
+                                <h5 class="text-muted mb-1">Precio Unitario</h5>
+                                <h4 class="text-success">RD$ {{ venta.precio_unitario }}</h4>
+                            </div>
+                            <div class="col-4">
+                                <h5 class="text-muted mb-1">Total</h5>
+                                <h4 class="text-danger">RD$ {{ venta.total }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones de Acción CORREGIDOS -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                            <button onclick="window.open('{% url 'prestamos:factura_venta' venta.id %}?print=true', '_blank')" 
+                                    class="btn btn-primary me-md-2">
+                                <i class="bi bi-printer me-2"></i>Imprimir Factura
+                            </button>
+                            <a href="{% url 'prestamos:descargar_pdf_venta' venta.id %}" class="btn btn-success me-md-2">
+                                <i class="bi bi-download me-2"></i>Descargar PDF
+                            </a>
+                            <a href="{% url 'usuarios:tablero' %}" class="btn btn-outline-secondary me-md-2">
+                                <i class="bi bi-house me-2"></i>Ir al Tablero
+                            </a>
+                            <a href="{% url 'prestamos:crear_venta' %}" class="btn btn-outline-primary">
+                                <i class="bi bi-plus-circle me-2"></i>Nueva Venta
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información Adicional -->
+                <div class="alert alert-info mt-4">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Nota:</strong> Esta factura sirve como constancia de la venta realizada. 
+                    Los productos vendidos no tienen garantía a menos que se especifique lo contrario.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .btn {
+        display: none !important;
+    }
+    .alert {
+        display: none !important;
+    }
+    .card-header.bg-success {
+        background-color: #198754 !important;
+        color: white !important;
+    }
+}
+</style>
+{% endblock %}
