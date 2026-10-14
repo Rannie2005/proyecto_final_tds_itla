@@ -1,0 +1,198 @@
+<!-- prestamos/templates/prestamos/listar_consumos.html -->
+{% extends 'base.html' %}
+
+{% block title %}Consumos Internos - Kema Constructora{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="bi bi-box-arrow-in-down me-2 text-danger"></i>Consumos Internos
+                    </h2>
+                    <p class="text-muted mb-0">Registro de materiales consumidos en proyectos</p>
+                </div>
+                <div>
+                    <a href="{% url 'prestamos:crear_consumo' %}" class="btn btn-danger">
+                        <i class="bi bi-plus-circle me-1"></i>Nuevo Consumo
+                    </a>
+                    <a href="{% url 'prestamos:reporte_semanal_consumos' %}" class="btn btn-info">
+                        <i class="bi bi-graph-up me-1"></i>Reporte Semanal
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Tipo de Consumo</label>
+                            <select name="tipo_consumo" class="form-select">
+                                <option value="">Todos los tipos</option>
+                                {% for key, value in tipos_consumo.items %}
+                                    <option value="{{ key }}" {% if request.GET.tipo_consumo == key %}selected{% endif %}>
+                                        {{ value }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Estado</label>
+                            <select name="estado" class="form-select">
+                                <option value="">Todos los estados</option>
+                                {% for key, value in estados.items %}
+                                    <option value="{{ key }}" {% if request.GET.estado == key %}selected{% endif %}>
+                                        {{ value }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Proyecto</label>
+                            <input type="text" name="proyecto" class="form-control" 
+                                placeholder="Buscar proyecto..." value="{{ request.GET.proyecto }}">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <div class="d-grid gap-2 col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-funnel me-1"></i>Filtrar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Consumido</h5>
+                    <h2 class="mb-0">{{ total_consumido }}</h2>
+                    <small>Unidades actualmente consumidas</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Devuelto</h5>
+                    <h2 class="mb-0">{{ total_devuelto }}</h2>
+                    <small>Unidades devueltas</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Registros</h5>
+                    <h2 class="mb-0">{{ consumos.count }}</h2>
+                    <small>Consumos registrados</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de consumos -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Fecha</th>
+                                    <th>Material</th>
+                                    <th>Proyecto</th>
+                                    <th>Cantidad</th>
+                                    <th>Estado</th>
+                                    <th>Responsable</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for consumo in consumos %}
+                                <tr>
+                                    <td>CONS-{{ consumo.id|stringformat:"06d" }}</td>
+                                    <td>{{ consumo.fecha_consumo|date:"d/m/Y" }}</td>
+                                    <td>
+                                        <strong>{{ consumo.herramienta.nombre }}</strong><br>
+                                        <small class="text-muted">{{ consumo.herramienta.codigo }}</small>
+                                    </td>
+                                    <td>
+                                        {{ consumo.proyecto }}<br>
+                                        <small class="text-muted">{{ consumo.get_tipo_consumo_display }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-column">
+                                            <span class="fw-bold text-danger">{{ consumo.cantidad_consumida }}</span>
+                                            {% if consumo.cantidad_devuelta > 0 %}
+                                            <small class="text-success">Devuelto: {{ consumo.cantidad_devuelta }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if consumo.estado == 'activo' %}
+                                            <span class="badge bg-danger">{{ consumo.get_estado_display }}</span>
+                                        {% elif consumo.estado == 'parcial_devuelto' %}
+                                            <span class="badge bg-warning">{{ consumo.get_estado_display }}</span>
+                                            <div class="progress mt-1" style="height: 5px;">
+                                                <div class="progress-bar bg-success" 
+                                                    style="width: {{ consumo.porcentaje_devuelto }}%"></div>
+                                            </div>
+                                        {% else %}
+                                            <span class="badge bg-success">{{ consumo.get_estado_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if consumo.empleado_responsable %}
+                                            {{ consumo.empleado_responsable.nombre }}<br>
+                                            <small class="text-muted">{{ consumo.empleado_responsable.cedula }}</small>
+                                        {% else %}
+                                            <span class="text-muted">Sin asignar</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'prestamos:comprobante_consumo' consumo.id %}" 
+                                                class="btn btn-outline-info" title="Ver comprobante">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            {% if consumo.puede_devolver %}
+                                                <a href="{% url 'prestamos:devolver_consumo' consumo.id %}" 
+                                                    class="btn btn-outline-success" title="Devolver">
+                                                    <i class="bi bi-arrow-return-left"></i>
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-4">
+                                        <i class="bi bi-inbox display-6 d-block mb-2"></i>
+                                        No hay consumos registrados
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

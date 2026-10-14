@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title|default:"Dashboard de Devoluciones" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Encabezado -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-6">
+                <i class="fas fa-exchange-alt"></i> Dashboard de Devoluciones
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'usuarios:tablero' %}">Inicio</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'prestamos:devoluciones_menu' %}">Devoluciones</a></li>
+                    <li class="breadcrumb-item active">Dashboard</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    <!-- Tarjetas de Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Total Consumos</h6>
+                            <h2 class="mb-0">{{ total_consumos }}</h2>
+                        </div>
+                        <i class="fas fa-fire fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-dark h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Consumos Activos</h6>
+                            <h2 class="mb-0">{{ consumos_activos }}</h2>
+                        </div>
+                        <i class="fas fa-clock fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Devoluciones Registradas</h6>
+                            <h2 class="mb-0">{{ total_devoluciones }}</h2>
+                        </div>
+                        <i class="fas fa-check-circle fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Tasa de Devolución</h6>
+                            <h2 class="mb-0">
+                                {% if total_consumos > 0 %}
+                                    {{ total_devoluciones|default:0|floatformat:0 }}%
+                                {% else %}
+                                    0%
+                                {% endif %}
+                            </h2>
+                        </div>
+                        <i class="fas fa-percentage fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sección de Consumos Pendientes -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-circle"></i> Consumos con Devolución Pendiente
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if consumos_pendientes %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Herramienta</th>
+                                        <th>Proyecto</th>
+                                        <th>Cantidad</th>
+                                        <th>Fecha Consumo</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for consumo in consumos_pendientes %}
+                                    <tr>
+                                        <td>#{{ consumo.id }}</td>
+                                        <td>
+                                            <strong>{{ consumo.herramienta.nombre }}</strong>
+                                            <br><small class="text-muted">{{ consumo.herramienta.codigo }}</small>
+                                        </td>
+                                        <td>{{ consumo.proyecto }}</td>
+                                        <td>
+                                            <span class="badge bg-danger">{{ consumo.cantidad_actual }}</span>
+                                            <br><small class="text-muted">De {{ consumo.cantidad_consumida }} total</small>
+                                        </td>
+                                        <td>{{ consumo.fecha_consumo|date:"d/m/Y H:i" }}</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{% url 'prestamos:comprobante_consumo' consumo.id %}" 
+                                                    class="btn btn-outline-primary" title="Ver Detalles">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{% url 'prestamos:devolver_consumo' consumo.id %}" 
+                                                    class="btn btn-outline-success" title="Registrar Devolución">
+                                                    <i class="fas fa-undo"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i>
+                            ¡Excelente! No hay consumos pendientes de devolución.
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'prestamos:listar_consumos' %}" class="btn btn-sm btn-outline-primary">
+                        Ver todos los consumos
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sección de Devoluciones Recientes -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history"></i> Devoluciones Recientes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if devoluciones_recientes %}
+                        <div class="list-group">
+                            {% for devolucion in devoluciones_recientes %}
+                            <div class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">
+                                        {{ devolucion.consumo.herramienta.nombre|truncatechars:20 }}
+                                    </h6>
+                                    <small>{{ devolucion.fecha_devolucion|timesince }}</small>
+                                </div>
+                                <p class="mb-1">
+                                    <span class="badge bg-success">{{ devolucion.cantidad_devuelta }}</span>
+                                    devueltos a <strong>{{ devolucion.consumo.proyecto }}</strong>
+                                </p>
+                                <small class="text-muted">
+                                    Por: {{ devolucion.devuelto_por.get_full_name|default:devolucion.devuelto_por.username }}
+                                </small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            No hay devoluciones registradas recientemente.
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <small class="text-muted">
+                        Últimas 10 devoluciones
+                    </small>
+                </div>
+            </div>
+            
+            <!-- Acciones Rápidas -->
+            <div class="card mt-3">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt"></i> Acciones Rápidas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'prestamos:crear_consumo' %}" class="btn btn-success">
+                            <i class="fas fa-plus-circle"></i> Nuevo Consumo
+                        </a>
+                        <a href="{% url 'prestamos:reporte_semanal_consumos' %}" class="btn btn-info">
+                            <i class="fas fa-chart-bar"></i> Reporte Semanal
+                        </a>
+                        <a href="{% url 'prestamos:listar_consumos' %}" class="btn btn-warning">
+                            <i class="fas fa-list"></i> Ver Todos los Consumos
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+
+<style>
+    .card {
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    
+    .card-header {
+        border-radius: 10px 10px 0 0 !important;
+    }
+    
+    .table th {
+        background-color: #f8f9fa;
+        border-top: none;
+    }
+    
+    .badge {
+        font-size: 0.85em;
+        padding: 5px 10px;
+    }
+    
+    .list-group-item {
+        border-left: none;
+        border-right: none;
+    }
+    
+    .list-group-item:first-child {
+        border-top: none;
+    }
+    
+    .breadcrumb {
+        background-color: transparent;
+        padding-left: 0;
+    }
+    
+    .btn-group-sm > .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Aquí puedes agregar JavaScript para gráficos si usas Chart.js
+        // Por ahora, es solo un placeholder
+        
+        // Ejemplo de cómo inicializar un gráfico (requiere Chart.js)
+        /*
+        const ctx = document.getElementById('graficoDevoluciones').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'],
+                datasets: [{
+                    label: 'Devoluciones',
+                    data: [12, 19, 8, 15],
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            }
+        });
+        */
+    });
+</script>
+{% endblock %}

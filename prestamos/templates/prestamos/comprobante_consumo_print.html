@@ -1,0 +1,357 @@
+<!-- prestamos/templates/prestamos/comprobante_consumo_print.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {% if tipo_comprobante == 'devolucion_total' %}
+            Comprobante Devolución Total Consumo #{{ consumo.id }}
+        {% elif tipo_comprobante == 'devolucion_parcial' %}
+            Comprobante Devolución Parcial Consumo #{{ consumo.id }}
+        else %}
+            Comprobante Consumo #{{ consumo.id }}
+        {% endif %} - Kema Constructora
+    </title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1cm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 21cm;
+            margin: 0 auto;
+            padding: 0;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 18px;
+            margin: 0;
+            font-weight: bold;
+        }
+        .header h2 {
+            font-size: 16px;
+            margin: 5px 0;
+            font-weight: bold;
+        }
+        .section {
+            margin-bottom: 15px;
+        }
+        .section-title {
+            font-weight: bold;
+            font-size: 13px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 3px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        .row {
+            display: flex;
+            margin-bottom: 5px;
+        }
+        .col-6 {
+            flex: 0 0 50%;
+        }
+        .col-4 {
+            flex: 0 0 33.333%;
+        }
+        .col-3 {
+            flex: 0 0 25%;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            font-size: 11px;
+        }
+        .table th, .table td {
+            border: 1px solid #000;
+            padding: 6px;
+            text-align: left;
+        }
+        .table th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+        .table-sm th, .table-sm td {
+            padding: 4px;
+            font-size: 10px;
+        }
+        .table-borderless td, .table-borderless th {
+            border: none;
+            padding: 3px 0;
+        }
+        .signature-section {
+            margin-top: 40px;
+            border-top: 1px solid #000;
+            padding-top: 20px;
+        }
+        .signature-box {
+            display: inline-block;
+            width: 45%;
+            text-align: center;
+            margin: 0 2.5%;
+        }
+        .signature-line {
+            border-bottom: 1px solid #000;
+            height: 40px;
+            margin-bottom: 5px;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 10px;
+            border-top: 1px solid #000;
+            padding-top: 10px;
+        }
+        .badge {
+            padding: 2px 6px;
+            font-size: 10px;
+            font-weight: bold;
+            border-radius: 2px;
+            text-transform: uppercase;
+        }
+        .badge-active { background-color: #ffc107; }
+        .badge-returned { background-color: #28a745; color: white; }
+        .badge-overdue { background-color: #dc3545; color: white; }
+        .badge-high { background-color: #dc3545; color: white; }
+        .badge-medium { background-color: #ffc107; }
+        .badge-low { background-color: #28a745; color: white; }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .text-left { text-align: left; }
+        .mb-1 { margin-bottom: 5px; }
+        .mb-2 { margin-bottom: 10px; }
+        .mb-3 { margin-bottom: 15px; }
+        .mt-3 { margin-top: 15px; }
+        .p-2 { padding: 8px; }
+        .border { border: 1px solid #000; }
+        .border-bottom { border-bottom: 1px solid #000; }
+        .bg-light { background-color: #f8f9fa; }
+        .summary-box {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: center;
+            height: 100%;
+        }
+        .summary-title {
+            font-size: 10px;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+        .summary-value {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .clausula {
+            margin: 15px 0;
+            padding: 10px;
+            border-left: 4px solid;
+        }
+        .clausula-devolucion-total { border-left-color: #28a745; background-color: #f0fff4; }
+        .clausula-devolucion-parcial { border-left-color: #ffc107; background-color: #fffbf0; }
+        .clausula-consumo { border-left-color: #dc3545; background-color: #fff0f0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Encabezado -->
+        <div class="header">
+            <h1>KEMA CONSTRUCTORA</h1>
+            <h2>
+                {% if tipo_comprobante == 'devolucion_total' %}
+                    CERTIFICADO DE DEVOLUCIÓN TOTAL
+                {% elif tipo_comprobante == 'devolucion_parcial' %}
+                    CERTIFICADO DE DEVOLUCIÓN PARCIAL
+                else %}
+                    COMPROBANTE DE CONSUMO INTERNO
+                {% endif %}
+            </h2>
+            <div class="row">
+                <div class="col-6 text-center">
+                    <strong>N° Comprobante: {{ consumo.id|stringformat:"06d" }}</strong>
+                </div>
+                <div class="col-6 text-center">
+                    <strong>Fecha: {% now "d/m/Y H:i" %}</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información General -->
+        <div class="section">
+            <div class="section-title">INFORMACIÓN GENERAL</div>
+            <div class="row">
+                <div class="col-6">
+                    <strong>Proyecto:</strong> {{ consumo.proyecto }}
+                </div>
+                <div class="col-6">
+                    <strong>Fecha Consumo:</strong> {{ consumo.fecha_consumo|date:"d/m/Y H:i" }}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-6">
+                    <strong>Responsable:</strong> {{ consumo.registrado_por.get_full_name|default:consumo.registrado_por.username }}
+                </div>
+                <div class="col-6">
+                    <strong>Herramienta:</strong> {{ consumo.herramienta.nombre }} ({{ consumo.herramienta.codigo }})
+                </div>
+            </div>
+        </div>
+
+        <!-- Resumen -->
+        <div class="section">
+            <div class="section-title">RESUMEN DEL CONSUMO</div>
+            <div class="row mb-3">
+                <div class="col-3">
+                    <div class="summary-box">
+                        <div class="summary-title">CONSUMIDO</div>
+                        <div class="summary-value">{{ consumo.cantidad_consumida }}</div>
+                        <div class="summary-unit">{{ consumo.herramienta.tipo_unidad.abreviatura }}</div>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="summary-box">
+                        <div class="summary-title">DEVUELTO</div>
+                        <div class="summary-value">{{ consumo.cantidad_devuelta }}</div>
+                        <div class="summary-unit">{{ consumo.herramienta.tipo_unidad.abreviatura }}</div>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="summary-box">
+                        <div class="summary-title">PENDIENTE</div>
+                        <div class="summary-value">{{ consumo.cantidad_actual }}</div>
+                        <div class="summary-unit">{{ consumo.herramienta.tipo_unidad.abreviatura }}</div>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="summary-box">
+                        <div class="summary-title">% DEVUELTO</div>
+                        <div class="summary-value">{{ consumo.porcentaje_devuelto|floatformat:0 }}%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- CLAUSULA ESPECÍFICA SEGÚN TIPO                -->
+        <!-- ============================================ -->
+        
+        {% if tipo_comprobante == 'devolucion_total' %}
+        <!-- CLAUSULA PARA DEVOLUCIÓN TOTAL -->
+        <div class="clausula clausula-devolucion-total">
+            <strong>✅ CERTIFICADO DE DEVOLUCIÓN TOTAL</strong><br><br>
+            Por medio del presente, se CERTIFICA que el proyecto <strong>{{ consumo.proyecto }}</strong> ha completado la 
+            <strong>DEVOLUCIÓN TOTAL</strong> de los materiales consumidos correspondientes al comprobante N° {{ consumo.id|stringformat:"06d" }}.<br><br>
+            <strong>Cantidad devuelta:</strong> {{ consumo.cantidad_devuelta }} {{ consumo.herramienta.tipo_unidad.abreviatura }}<br>
+            <strong>Fecha de última devolución:</strong> {{ devoluciones.first.fecha_devolucion|date:"d/m/Y H:i"|default:"-" }}<br><br>
+            <strong>Declaración:</strong> El responsable del proyecto declara que NO quedan cantidades pendientes por devolver. 
+            Este comprobante CIERRA DEFINITIVAMENTE el registro de consumo.
+        </div>
+        
+        {% elif tipo_comprobante == 'devolucion_parcial' %}
+        <!-- CLAUSULA PARA DEVOLUCIÓN PARCIAL -->
+        <div class="clausula clausula-devolucion-parcial">
+            <strong>⚠️ CERTIFICADO DE DEVOLUCIÓN PARCIAL</strong><br><br>
+            Se deja constancia que el proyecto <strong>{{ consumo.proyecto }}</strong> ha realizado una 
+            <strong>DEVOLUCIÓN PARCIAL</strong> de los materiales consumidos.<br><br>
+            <strong>Cantidad devuelta en esta oportunidad:</strong> {{ devoluciones.first.cantidad_devuelta|default:consumo.cantidad_devuelta }} {{ consumo.herramienta.tipo_unidad.abreviatura }}<br>
+            <strong>Cantidad total devuelta acumulada:</strong> {{ consumo.cantidad_devuelta }} {{ consumo.herramienta.tipo_unidad.abreviatura }}<br>
+            <strong>Cantidad PENDIENTE por devolver:</strong> {{ consumo.cantidad_actual }} {{ consumo.herramienta.tipo_unidad.abreviatura }}<br><br>
+            <strong>Obligación pendiente:</strong> El responsable del proyecto se compromete a completar la devolución 
+            de las cantidades faltantes a la brevedad posible.
+        </div>
+        
+        {% else %}
+        <!-- CLAUSULA PARA CONSUMO NORMAL -->
+        <div class="clausula clausula-consumo">
+            <strong>📜 DECLARACIÓN DE CONSUMO INTERNO</strong><br><br>
+            El(La) suscrito(a), <strong>{{ consumo.registrado_por.get_full_name|default:consumo.registrado_por.username }}</strong>, 
+            en calidad de responsable del proyecto <strong>{{ consumo.proyecto }}</strong>, DECLARA BAJO JURAMENTO que:<br><br>
+            1. Los materiales descritos ({{ consumo.herramienta.nombre }}) fueron <strong>EFECTIVAMENTE CONSUMIDOS</strong> en las obras del proyecto.<br>
+            2. El consumo fue <strong>AUTORIZADO</strong> por el área correspondiente.<br>
+            3. Los materiales consumidos <strong>NO PUEDEN SER REUTILIZADOS</strong> en otros proyectos.<br>
+            4. Se realizó el <strong>DESCUENTO DE INVENTARIO</strong> correspondiente por {{ consumo.cantidad_consumida }} {{ consumo.herramienta.tipo_unidad.abreviatura }}.<br><br>
+            <strong>Nota:</strong> Cualquier devolución de materiales no utilizados debe registrarse como <strong>DEVOLUCIÓN DE CONSUMO</strong> 
+            a través del sistema.
+        </div>
+        {% endif %}
+
+        <!-- Devoluciones Registradas -->
+        {% if devoluciones %}
+        <div class="section">
+            <div class="section-title">HISTORIAL DE DEVOLUCIONES</div>
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Cantidad</th>
+                        <th>Devuelto por</th>
+                        <th>Observaciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for devolucion in devoluciones %}
+                    <tr>
+                        <td>{{ devolucion.fecha_devolucion|date:"d/m/Y H:i" }}</td>
+                        <td>{{ devolucion.cantidad_devuelta }} {{ consumo.herramienta.tipo_unidad.abreviatura }}</td>
+                        <td>{{ devolucion.devuelto_por.get_full_name|default:devolucion.devuelto_por.username }}</td>
+                        <td>{{ devolucion.observaciones|default:"-" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <!-- Firmas -->
+        <div class="signature-section">
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <strong>RESPONSABLE DEL PROYECTO</strong><br>
+                {{ consumo.registrado_por.get_full_name|default:consumo.registrado_por.username }}
+            </div>
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <strong>JEFE DE ALMACÉN</strong><br>
+                _________________________
+            </div>
+        </div>
+
+        <!-- Pie de página -->
+        <div class="footer">
+            <strong>KEMA CONSTRUCTORA - Sistema de Gestión de Almacén</strong><br>
+            Comprobante generado el {% now "d/m/Y H:i" %}<br>
+            {% if tipo_comprobante == 'devolucion_total' %}
+            Este certificado es válido como CONSTANCIA DE DEVOLUCIÓN TOTAL.
+            {% elif tipo_comprobante == 'devolucion_parcial' %}
+            Este certificado es válido como CONSTANCIA DE DEVOLUCIÓN PARCIAL.
+            {% else %}
+            Este documento es válido solo para uso interno de la empresa.
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            window.print();
+            setTimeout(function() {
+                window.close();
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

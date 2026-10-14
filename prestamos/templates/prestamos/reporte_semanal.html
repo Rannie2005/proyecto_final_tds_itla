@@ -1,0 +1,737 @@
+<!-- prestamos/templates/prestamos/reporte_semanal.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title|default:"Reporte Semanal" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Encabezado con Navegación -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="bi bi-calendar-week me-2 text-primary"></i>{{ title }}
+                    </h2>
+                    <p class="text-muted mb-0">Resumen de actividades de la semana</p>
+                </div>
+                <div class="btn-group">
+                    <a href="?fecha={{ semana_anterior|date:'Y-m-d' }}" class="btn btn-outline-primary">
+                        <i class="bi bi-chevron-left"></i> Semana Anterior
+                    </a>
+                    <a href="?fecha={{ hoy|date:'Y-m-d' }}" class="btn btn-outline-primary">
+                        Esta Semana
+                    </a>
+                    <a href="?fecha={{ semana_siguiente|date:'Y-m-d' }}" class="btn btn-outline-primary">
+                        Semana Siguiente <i class="bi bi-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Selector de Fecha -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-2">
+                        <div class="col-md-8">
+                            <label class="form-label">Seleccionar Semana:</label>
+                            <input type="date" name="fecha" class="form-control" 
+                                   value="{{ inicio_semana|date:'Y-m-d' }}">
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-search me-1"></i> Ver Semana
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-calendar-range me-2"></i>
+                        {{ inicio_semana|date:"d/m/Y" }} - {{ fin_semana|date:"d/m/Y" }}
+                    </h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JSON Scripts para datos de gráficos -->
+    {{ dias_semana|json_script:"dias-semana-data" }}
+    {{ prestamos_por_dia|json_script:"prestamos-dia-data" }}
+    {{ ventas_por_dia|json_script:"ventas-dia-data" }}
+    {{ consumos_por_dia|json_script:"consumos-dia-data" }}
+    {{ danados_por_dia|default:"[]"|json_script:"danados-dia-data" }}
+    {{ perdidos_por_dia|default:"[]"|json_script:"perdidos-dia-data" }}
+
+    <!-- Tarjetas de Resumen Semanal - ACTUALIZADAS CON DAÑADOS/PERDIDOS -->
+    <div class="row mb-4">
+        <!-- Préstamos -->
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card border-left-primary shadow h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Préstamos
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold">{{ total_prestamos_semana }}</div>
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    {{ prestamos_activos_semana }} activos • 
+                                    {{ prestamos_devueltos_semana }} devueltos
+                                </small>
+                            </div>
+                        </div>
+                        <i class="bi bi-arrow-up-circle fa-2x text-primary opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Buen Estado -->
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card border-left-success shadow h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Buen Estado
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold">{{ total_buen_estado_semana|default:0 }}</div>
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    Devueltos correctamente
+                                </small>
+                            </div>
+                        </div>
+                        <i class="bi bi-check-circle fa-2x text-success opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dañados -->
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card border-left-warning shadow h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Dañados
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold">{{ total_danados_semana|default:0 }}</div>
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    Valor: ${{ valor_danados_semana|floatformat:0|default:0 }}
+                                </small>
+                            </div>
+                        </div>
+                        <i class="bi bi-tools fa-2x text-warning opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Perdidos -->
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card border-left-danger shadow h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Perdidos
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold">{{ total_perdidos_semana|default:0 }}</div>
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    Valor: ${{ valor_perdidos_semana|floatformat:0|default:0 }}
+                                </small>
+                            </div>
+                        </div>
+                        <i class="bi bi-question-circle fa-2x text-danger opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Consumos -->
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card border-left-info shadow h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Consumos
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold">{{ total_consumos_semana }}</div>
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    {{ devoluciones_semana.count }} devoluciones
+                                </small>
+                            </div>
+                        </div>
+                        <i class="bi bi-fire fa-2x text-info opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ventas -->
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card border-left-success shadow h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Ventas
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold">{{ total_ventas_semana }}</div>
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    Valor: ${{ valor_ventas_semana|floatformat:0 }}
+                                </small>
+                            </div>
+                        </div>
+                        <i class="bi bi-cash-coin fa-2x text-success opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico de Actividad por Día -->
+    <div class="row mb-4">
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow">
+                <div class="card-header bg-white py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-bar-chart me-2"></i>Actividad Diaria
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area" style="height: 300px;">
+                        <canvas id="actividadDiariaChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Distribución de Devoluciones -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow">
+                <div class="card-header bg-white py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-pie-chart me-2"></i>Devoluciones por Estado
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4" style="height: 250px;">
+                        <canvas id="devolucionesEstadoChart"></canvas>
+                    </div>
+                    <div class="mt-3 text-center">
+                        <div class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            Buen Estado: {{ total_buen_estado_semana|default:0 }}
+                        </div>
+                        <div class="mb-2">
+                            <i class="bi bi-tools text-warning me-2"></i>
+                            Dañados: {{ total_danados_semana|default:0 }}
+                        </div>
+                        <div>
+                            <i class="bi bi-question-circle text-danger me-2"></i>
+                            Perdidos: {{ total_perdidos_semana|default:0 }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Herramientas con Más Dañados/Perdidos Esta Semana -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>Herramientas con Dañados/Perdidos (Esta Semana)
+                    </h6>
+                    <span class="badge bg-danger">{{ herramientas_danadas_perdidas_semana|length }} herramientas</span>
+                </div>
+                <div class="card-body">
+                    {% if herramientas_danadas_perdidas_semana %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Herramienta</th>
+                                        <th>Código</th>
+                                        <th>Dañados</th>
+                                        <th>Perdidos</th>
+                                        <th>Total Afectado</th>
+                                        <th>% del Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in herramientas_danadas_perdidas_semana %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ item.herramienta__nombre|truncatechars:25 }}</strong>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">{{ item.herramienta__codigo|default:"-" }}</small>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-warning text-dark">{{ item.total_danado|default:0 }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-danger">{{ item.total_perdido|default:0 }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-dark">{{ item.total_afectado|default:0 }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            {% if devoluciones_detalladas.total_devuelto > 0 %}
+                                                {% widthratio item.total_afectado devoluciones_detalladas.total_devuelto 100 as porcentaje %}
+                                                <span class="badge bg-info">{{ porcentaje|floatformat:1 }}%</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">0%</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-check-circle fa-3x text-success mb-3"></i>
+                            <p class="text-muted">¡Excelente! No hay herramientas con dañados o perdidos esta semana.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Préstamos de la Semana - ACTUALIZADO PARA MOSTRAR DEVOLUCIONES DETALLADAS -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-arrow-up-circle me-2"></i>Préstamos de la Semana
+                    </h6>
+                    <div>
+                        <span class="badge bg-success me-2">{{ prestamos_completamente_devueltos_semana }} completos</span>
+                        <span class="badge bg-warning text-dark">{{ prestamos_parcialmente_devueltos_semana }} parciales</span>
+                        <span class="badge bg-primary">{{ prestamos_semana.count }} total</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if prestamos_semana %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Cliente</th>
+                                        <th>Herramienta</th>
+                                        <th>Prestado</th>
+                                        <th>Devuelto (B/D/P)</th>
+                                        <th>Estado</th>
+                                        <th>Fecha</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for prestamo in prestamos_semana|slice:":10" %}
+                                    <tr>
+                                        <td>#{{ prestamo.id }}</td>
+                                        <td>
+                                            {% if prestamo.empleado %}
+                                                {{ prestamo.empleado.nombre|truncatechars:15 }}
+                                            {% else %}
+                                                {{ prestamo.cliente_externo|truncatechars:15 }}
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ prestamo.herramienta.nombre|truncatechars:20 }}</td>
+                                        <td class="text-center">
+                                            <span class="badge bg-dark">{{ prestamo.cantidad_prestada }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            {% if prestamo.cantidad_total_devuelta > 0 %}
+                                                <div class="small">
+                                                    <span class="badge bg-success">{{ prestamo.cantidad_devuelta_buen_estado|default:0 }}</span>
+                                                    <span class="badge bg-warning text-dark">{{ prestamo.cantidad_devuelta_danada|default:0 }}</span>
+                                                    <span class="badge bg-danger">{{ prestamo.cantidad_devuelta_perdida|default:0 }}</span>
+                                                </div>
+                                                <small class="text-muted">Total: {{ prestamo.cantidad_total_devuelta }}</small>
+                                            {% else %}
+                                                <span class="badge bg-secondary">0</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if prestamo.estado == 'activo' %}
+                                                <span class="badge bg-warning">Activo</span>
+                                            {% elif prestamo.estado == 'devuelto' %}
+                                                <span class="badge bg-success">Devuelto</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ prestamo.get_estado_display }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ prestamo.fecha_prestamo|date:"d/m H:i" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% if prestamos_semana.count > 10 %}
+                            <div class="text-center mt-2">
+                                <small class="text-muted">
+                                    Mostrando 10 de {{ prestamos_semana.count }} préstamos
+                                </small>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-inbox fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No hay préstamos registrados esta semana</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Consumos de la Semana -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-warning">
+                        <i class="bi bi-fire me-2"></i>Consumos de la Semana
+                    </h6>
+                    <span class="badge bg-warning text-dark">{{ consumos_semana.count }} registros</span>
+                </div>
+                <div class="card-body">
+                    {% if consumos_semana %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Proyecto</th>
+                                        <th>Herramienta</th>
+                                        <th>Cantidad</th>
+                                        <th>Fecha</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for consumo in consumos_semana|slice:":10" %}
+                                    <tr>
+                                        <td>#{{ consumo.id }}</td>
+                                        <td>{{ consumo.proyecto|truncatechars:20 }}</td>
+                                        <td>{{ consumo.herramienta.nombre|truncatechars:20 }}</td>
+                                        <td>
+                                            {{ consumo.cantidad_actual }} / {{ consumo.cantidad_consumida }}
+                                        </td>
+                                        <td>{{ consumo.fecha_consumo|date:"d/m H:i" }}</td>
+                                        <td>
+                                            {% if consumo.cantidad_actual > 0 %}
+                                                <span class="badge bg-warning text-dark">Pendiente</span>
+                                            {% else %}
+                                                <span class="badge bg-success">Completado</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-inbox fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No hay consumos registrados esta semana</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="btn-group" role="group">
+                        <button onclick="window.print()" class="btn btn-outline-primary">
+                            <i class="bi bi-printer me-1"></i> Imprimir Reporte
+                        </button>
+                        <button id="btnExportarPDF" class="btn btn-outline-success">
+                            <i class="bi bi-file-earmark-pdf me-1"></i> Exportar a PDF
+                        </button>
+                        <button id="btnExportarExcel" class="btn btn-outline-info">
+                            <i class="bi bi-file-earmark-excel me-1"></i> Exportar a Excel
+                        </button>
+                        <a href="{% url 'prestamos:estadisticas_generales' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-graph-up me-1"></i> Ver Estadísticas Completas
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card bg-light border-0">
+                <div class="card-body text-center py-3">
+                    <p class="mb-0 text-muted">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Reporte generado el {% now "d/m/Y H:i" %}
+                        <span class="mx-2">•</span>
+                        Semana del {{ inicio_semana|date:"d/m/Y" }} al {{ fin_semana|date:"d/m/Y" }}
+                        <span class="mx-2">•</span>
+                        Total afectado: {{ total_danados_semana|default:0 }} dañados + {{ total_perdidos_semana|default:0 }} perdidos
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Incluir Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Obtener datos de los scripts JSON
+        const diasSemana = JSON.parse(document.getElementById('dias-semana-data').textContent);
+        const prestamosDiaData = JSON.parse(document.getElementById('prestamos-dia-data').textContent);
+        const ventasDiaData = JSON.parse(document.getElementById('ventas-dia-data').textContent);
+        const consumosDiaData = JSON.parse(document.getElementById('consumos-dia-data').textContent);
+        const danadosDiaData = JSON.parse(document.getElementById('danados-dia-data').textContent);
+        const perdidosDiaData = JSON.parse(document.getElementById('perdidos-dia-data').textContent);
+        
+        // Gráfico de Actividad Diaria
+        const ctxDiario = document.getElementById('actividadDiariaChart').getContext('2d');
+        const diarioChart = new Chart(ctxDiario, {
+            type: 'bar',
+            data: {
+                labels: diasSemana,
+                datasets: [
+                    {
+                        label: 'Préstamos',
+                        data: prestamosDiaData,
+                        backgroundColor: 'rgba(13, 110, 253, 0.7)',
+                        borderColor: 'rgb(13, 110, 253)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Dañados',
+                        data: danadosDiaData,
+                        backgroundColor: 'rgba(253, 126, 20, 0.7)',
+                        borderColor: 'rgb(253, 126, 20)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Perdidos',
+                        data: perdidosDiaData,
+                        backgroundColor: 'rgba(220, 53, 69, 0.7)',
+                        borderColor: 'rgb(220, 53, 69)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Ventas (valor)',
+                        data: ventasDiaData,
+                        type: 'line',
+                        borderColor: 'rgb(40, 167, 69)',
+                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                        tension: 0.3,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Actividad por Día'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        },
+                        title: {
+                            display: true,
+                            text: 'Cantidad'
+                        }
+                    },
+                    y1: {
+                        position: 'right',
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Valor Ventas ($)'
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Gráfico de Devoluciones por Estado
+        const ctxDevoluciones = document.getElementById('devolucionesEstadoChart').getContext('2d');
+        const devolucionesChart = new Chart(ctxDevoluciones, {
+            type: 'pie',
+            data: {
+                labels: ['Buen Estado', 'Dañados', 'Perdidos'],
+                datasets: [{
+                    data: [
+                        {{ total_buen_estado_semana|default:0 }},
+                        {{ total_danados_semana|default:0 }},
+                        {{ total_perdidos_semana|default:0 }}
+                    ],
+                    backgroundColor: [
+                        'rgba(40, 167, 69, 0.8)',
+                        'rgba(253, 126, 20, 0.8)',
+                        'rgba(220, 53, 69, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgb(40, 167, 69)',
+                        'rgb(253, 126, 20)',
+                        'rgb(220, 53, 69)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+
+        // Exportar a PDF (simulado)
+        document.getElementById('btnExportarPDF').addEventListener('click', function() {
+            alert('Función de exportación a PDF en desarrollo.\nPor ahora use la función de impresión.');
+        });
+
+        // Exportar a Excel (simulado)
+        document.getElementById('btnExportarExcel').addEventListener('click', function() {
+            // Crear tabla HTML para exportar
+            let tableHtml = `
+                <table border="1">
+                    <tr><th colspan="8">Reporte Semanal - {{ inicio_semana|date:"d/m/Y" }} al {{ fin_semana|date:"d/m/Y" }}</th></tr>
+                    <tr><td colspan="8"><strong>Resumen</strong></td></tr>
+                    <tr>
+                        <td>Préstamos:</td><td>{{ total_prestamos_semana }}</td>
+                        <td>Buen Estado:</td><td>{{ total_buen_estado_semana|default:0 }}</td>
+                        <td>Dañados:</td><td>{{ total_danados_semana|default:0 }}</td>
+                        <td>Perdidos:</td><td>{{ total_perdidos_semana|default:0 }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">Consumos:</td><td colspan="2">{{ total_consumos_semana }}</td>
+                        <td colspan="2">Ventas:</td><td colspan="2">{{ total_ventas_semana }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">Valor Ventas:</td><td colspan="6">${{ valor_ventas_semana|floatformat:0 }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">Valor Dañados:</td><td colspan="2">${{ valor_danados_semana|floatformat:0|default:0 }}</td>
+                        <td colspan="2">Valor Perdidos:</td><td colspan="2">${{ valor_perdidos_semana|floatformat:0|default:0 }}</td>
+                    </tr>
+                </table>
+            `;
+            
+            // Crear blob y descargar
+            const blob = new Blob([tableHtml], { type: 'text/html' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'reporte_semanal_{{ inicio_semana|date:"Y-m-d" }}.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        });
+    });
+</script>
+
+<style>
+    .card {
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    
+    .card-header {
+        border-radius: 10px 10px 0 0 !important;
+    }
+    
+    .border-left-primary { border-left: 0.25rem solid #0d6efd !important; }
+    .border-left-warning { border-left: 0.25rem solid #fd7e14 !important; }
+    .border-left-success { border-left: 0.25rem solid #198754 !important; }
+    .border-left-info { border-left: 0.25rem solid #0dcaf0 !important; }
+    .border-left-danger { border-left: 0.25rem solid #dc3545 !important; }
+    
+    .badge {
+        font-size: 0.75em;
+        padding: 4px 8px;
+    }
+    
+    .table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+    }
+    
+    .table td {
+        vertical-align: middle;
+    }
+    
+    .btn-group .btn {
+        border-radius: 5px;
+    }
+    
+    @media print {
+        .btn, .btn-group, .card-header, .text-muted, .form-control, .bg-light {
+            display: none !important;
+        }
+        
+        .card {
+            border: 1px solid #dee2e6 !important;
+            box-shadow: none !important;
+            margin-bottom: 10px !important;
+        }
+        
+        h2, h6 {
+            color: #000 !important;
+        }
+    }
+</style>
+{% endblock %}

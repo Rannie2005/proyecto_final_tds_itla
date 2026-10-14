@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block title %}Registrar Préstamo - Kema Constructora{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-1"><i class="bi bi-arrow-up-circle"></i> Registrar Préstamo</h2>
+                <p class="text-muted mb-0">Registro de préstamo de herramientas</p>
+            </div>
+            <div class="text-end">
+                {% if herramienta %}
+                <span class="badge bg-primary fs-6">
+                    <i class="bi bi-tools me-1"></i>{{ herramienta.nombre }}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card card-custom shadow border-0">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0"><i class="bi bi-clipboard-check me-2 text-primary"></i>Datos del Préstamo</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- Herramienta -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Herramienta:</label>
+                        {{ form.herramienta }}
+                        {% if form.herramienta.errors %}
+                        <div class="text-danger small">{{ form.herramienta.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Tipo de Cliente -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Tipo de Cliente:</label>
+                        <div class="d-flex gap-4">
+                            {% for choice in form.tipo_cliente %}
+                            <div class="form-check">
+                                {{ choice.tag }}
+                                <label class="form-check-label" for="{{ choice.id_for_label }}">
+                                    {{ choice.choice_label }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Campos dinámicos según tipo de cliente -->
+                    <div id="empleado-fields" class="mb-4">
+                        <label class="form-label fw-bold">Empleado:</label>
+                        {{ form.empleado }}
+                        {% if form.empleado.errors %}
+                        <div class="text-danger small">{{ form.empleado.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div id="externo-fields" class="mb-4" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Nombre Cliente Externo:</label>
+                                {{ form.cliente_externo }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Cédula:</label>
+                                {{ form.cedula_externo }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cantidad y Fecha -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Cantidad Prestada:</label>
+                            {{ form.cantidad_prestada }}
+                            {% if form.cantidad_prestada.errors %}
+                            <div class="text-danger small">{{ form.cantidad_prestada.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Fecha Devolución Estimada:</label>
+                            {{ form.fecha_devolucion_estimada }}
+                        </div>
+                    </div>
+
+                    <!-- Condición y Observaciones -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Condición al Prestar:</label>
+                        {{ form.condicion_prestamo }}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Observaciones:</label>
+                        {{ form.observaciones }}
+                    </div>
+
+                    <!-- Información del Prestador -->
+                    <div class="alert alert-info">
+                        <i class="bi bi-person-check me-2"></i>
+                        <strong>Prestado por:</strong> {{ user.get_full_name|default:user.username }}
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% if herramienta %}/inventario/herramienta/{{ herramienta.id }}/{% else %}/inventario/{% endif %}" 
+                            class="btn btn-outline-secondary me-md-2">
+                            <i class="bi bi-arrow-left me-2"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle me-2"></i>Registrar Préstamo y Generar PDF
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tipoClienteRadios = document.querySelectorAll('input[name="tipo_cliente"]');
+    const empleadoFields = document.getElementById('empleado-fields');
+    const externoFields = document.getElementById('externo-fields');
+    
+    function toggleClienteFields() {
+        const selectedValue = document.querySelector('input[name="tipo_cliente"]:checked').value;
+        
+        if (selectedValue === 'empleado') {
+            empleadoFields.style.display = 'block';
+            externoFields.style.display = 'none';
+            // Hacer requeridos los campos de empleado
+            document.getElementById('id_empleado').required = true;
+            document.getElementById('id_cliente_externo').required = false;
+        } else {
+            empleadoFields.style.display = 'none';
+            externoFields.style.display = 'block';
+            // Hacer requeridos los campos de externo
+            document.getElementById('id_empleado').required = false;
+            document.getElementById('id_cliente_externo').required = true;
+        }
+    }
+    
+    // Inicializar
+    toggleClienteFields();
+    
+    // Escuchar cambios
+    tipoClienteRadios.forEach(radio => {
+        radio.addEventListener('change', toggleClienteFields);
+    });
+});
+</script>
+{% endblock %}

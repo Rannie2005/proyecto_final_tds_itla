@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card border-0 shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-check-circle-fill me-2"></i>Devolución Registrada
+                    </h4>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Alertas de éxito -->
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        <strong>¡Devolución registrada exitosamente!</strong>
+                    </div>
+                    
+                    <!-- Info del préstamo devuelto -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-subtitle mb-2 text-muted">Préstamo #{{ prestamo.id|stringformat:"06d" }}</h6>
+                                    <p class="mb-1"><strong>Herramienta:</strong> {{ prestamo.herramienta.nombre }}</p>
+                                    <p class="mb-1"><strong>Cantidad prestada:</strong> {{ prestamo.cantidad_prestada }} {{ prestamo.herramienta.tipo_unidad.abreviatura }}</p>
+                                    <p class="mb-0"><strong>Fecha préstamo:</strong> {{ prestamo.fecha_prestamo|date:"d/m/Y H:i" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-subtitle mb-2 text-muted">Información del Receptor</h6>
+                                    <p class="mb-1"><strong>Nombre:</strong> {{ prestamo.quien_recibe }}</p>
+                                    <p class="mb-1"><strong>Identificación:</strong> 
+                                        {% if prestamo.empleado %}
+                                            {{ prestamo.empleado.cedula|default:"No especificada" }}
+                                        {% else %}
+                                            {{ prestamo.cedula_externo|default:"No especificada" }}
+                                        {% endif %}
+                                    </p>
+                                    <p class="mb-0"><strong>Fecha devolución:</strong> {% now "d/m/Y H:i" %}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Resumen de la devolución -->
+                    <div class="section mb-4">
+                        <h5 class="border-bottom pb-2 mb-3">
+                            <i class="bi bi-arrow-return-left me-2"></i>Resumen de Devolución
+                        </h5>
+                        <div class="row text-center">
+                            <div class="col-md-3 mb-3">
+                                <div class="card border-success">
+                                    <div class="card-body">
+                                        <i class="bi bi-check-circle-fill text-success fs-1"></i>
+                                        <h3 class="mt-2">{{ buenos|default:"0" }}</h3>
+                                        <p class="mb-0 text-muted">Buen Estado</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="card border-warning">
+                                    <div class="card-body">
+                                        <i class="bi bi-tools text-warning fs-1"></i>
+                                        <h3 class="mt-2">{{ danados|default:"0" }}</h3>
+                                        <p class="mb-0 text-muted">Dañados</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="card border-danger">
+                                    <div class="card-body">
+                                        <i class="bi bi-question-circle text-danger fs-1"></i>
+                                        <h3 class="mt-2">{{ perdidos|default:"0" }}</h3>
+                                        <p class="mb-0 text-muted">Perdidos</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="card border-primary bg-primary text-white">
+                                    <div class="card-body">
+                                        <i class="bi bi-calculator fs-1"></i>
+                                        <h3 class="mt-2">{{ total_devuelto|default:"0" }}</h3>
+                                        <p class="mb-0">Total Devuelto</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Estado actual del préstamo -->
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <div class="alert alert-info">
+                                    <strong>Estado del préstamo:</strong>
+                                    {% if prestamo.es_completamente_devuelto %}
+                                        <span class="badge bg-success">COMPLETAMENTE DEVUELTO</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">PARCIALMENTE DEVUELTO</span>
+                                        <p class="mt-2 mb-0">
+                                            <strong>Pendiente por devolver:</strong> 
+                                            {{ prestamo.pendiente_por_devolver }} {{ prestamo.herramienta.tipo_unidad.abreviatura }}
+                                        </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                {% if danados > 0 or perdidos > 0 %}
+                                <div class="alert alert-danger">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                    <strong>Responsabilidad Económica:</strong><br>
+                                    {% if danados > 0 %}
+                                        {{ danados }} unidad(es) dañadas - Pagar reparación<br>
+                                    {% endif %}
+                                    {% if perdidos > 0 %}
+                                        {{ perdidos }} unidad(es) perdidas - Pagar reposición
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Cláusula de responsabilidad firmada -->
+                    <div class="card border-dark mb-4">
+                        <div class="card-header bg-dark text-white">
+                            <i class="bi bi-file-text me-2"></i>
+                            <strong>DECLARACIÓN DE RESPONSABILIDAD Y CLÁUSULA LEGAL</strong>
+                        </div>
+                        <div class="card-body">
+                            <p class="small">
+                                El receptor declara bajo protesta de decir verdad haber recibido la(s) herramienta(s) 
+                                o material(es) descrito(s) en el comprobante de préstamo original, en condiciones físicas 
+                                y operativas adecuadas para su uso habitual.
+                            </p>
+                            
+                            <p class="small">
+                                <strong>DE LA DEVOLUCIÓN REALIZADA:</strong> El receptor ha devuelto el día de hoy 
+                                <strong>{{ total_devuelto }} {{ prestamo.herramienta.tipo_unidad.abreviatura }}</strong> de la siguiente manera:
+                            </p>
+                            <ul class="small">
+                                <li><span class="text-success">✓ Buen estado:</span> {{ buenos }} unidad(es)</li>
+                                <li><span class="text-warning">⚠ Dañados:</span> {{ danados }} unidad(es)</li>
+                                <li><span class="text-danger">✗ Perdidos:</span> {{ perdidos }} unidad(es)</li>
+                            </ul>
+                            
+                            <p class="small">
+                                El receptor reconoce que la(s) herramienta(s) marcada(s) como 
+                                <strong>"Dañados" o "Perdidos"</strong> serán descontadas permanentemente del inventario 
+                                y causan responsabilidad económica a su cargo, equivalente al <strong>costo de reparación 
+                                certificada</strong> o al <strong>costo de reposición a valor comercial actual</strong>, 
+                                según determine KEMA CONSTRUCTORA.
+                            </p>
+                            
+                            <p class="small">
+                                {% if prestamo.es_completamente_devuelto %}
+                                Con la presente devolución, el receptor queda liberado de toda obligación respecto a este 
+                                comprobante, <strong>excepto los pagos pendientes por daños o pérdidas registrados en esta
+                                devolución</strong>.
+                                {% else %}
+                                Queda un saldo pendiente de <strong>{{ prestamo.pendiente_por_devolver }} 
+                                {{ prestamo.herramienta.tipo_unidad.abreviatura }}</strong> que deberá ser devuelto
+                                en futuras entregas, conforme a la fecha estimada original del préstamo.
+                                {% endif %}
+                            </p>
+                            
+                            <div class="alert alert-secondary mt-3">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>ACEPTACIÓN:</strong> El receptor, mediante su firma al pie de este documento, 
+                                acepta expresamente todas las condiciones aquí estipuladas y los cargos correspondientes 
+                                por artículos dañados o perdidos.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Firmas -->
+                    <div class="row mt-4">
+                        <div class="col-md-6 text-center">
+                            <div class="border-top pt-3">
+                                <strong>PRESTADOR</strong><br>
+                                {{ prestamo.prestado_por.get_full_name|default:prestamo.prestado_por.username }}<br>
+                                <small class="text-muted">(Quien recibe la devolución)</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-center">
+                            <div class="border-top pt-3">
+                                <strong>RECEPTOR</strong><br>
+                                {{ prestamo.quien_recibe }}<br>
+                                <small class="text-muted">(Quien devuelve los artículos)</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Botones de acción -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'prestamos:detalle_prestamo' prestamo.id %}" class="btn btn-secondary">
+                                    <i class="bi bi-arrow-left me-2"></i>Volver al Préstamo
+                                </a>
+                                <a href="{% url 'prestamos:comprobante_devolucion_prestamo_print' prestamo.id %}" 
+                                   class="btn btn-success" target="_blank">
+                                    <i class="bi bi-printer me-2"></i>Imprimir Comprobante
+                                </a>
+                                <a href="{% url 'prestamos:listar_prestamos' %}" class="btn btn-primary">
+                                    <i class="bi bi-list me-2"></i>Ver Todos los Préstamos
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

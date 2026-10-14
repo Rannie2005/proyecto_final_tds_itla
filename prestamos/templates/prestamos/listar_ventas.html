@@ -1,0 +1,427 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% block title %}Lista de Ventas - Kema Constructora{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow border-0">
+                <!-- Encabezado -->
+                <div class="card-header bg-purple text-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">
+                                <i class="fas fa-shopping-cart me-2"></i>LISTA DE VENTAS
+                            </h4>
+                            <p class="mb-0 small opacity-75"></p>
+                        </div>
+                        <div>
+                            <a href="{% url 'prestamos:crear_venta' %}" class="btn btn-light">
+                                <i class="fas fa-plus-circle me-1"></i>Nueva Venta
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Tarjetas de Estadísticas -->
+                    <div class="row mb-4">
+                        <div class="col-xl-3 col-md-6 mb-3">
+                            <div class="card border-left-primary shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                Total Ventas
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                {{ total_ventas }}
+                                            </div>
+                                            <div class="mt-2 text-xs">
+                                                <span class="text-success">
+                                                    <i class="fas fa-arrow-up"></i> {{ ventas_hoy }} hoy
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-chart-bar fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-xl-3 col-md-6 mb-3">
+                            <div class="card border-left-success shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                Monto Total
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                RD$ {{ total_monto|floatformat:2 }}
+                                            </div>
+                                            <div class="mt-2 text-xs">
+                                                <span class="text-muted">Últimos 7 días: {{ ventas_ultima_semana }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-xl-3 col-md-6 mb-3">
+                            <div class="card border-left-info shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                                Cantidad Vendida
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                {{ total_cantidad|floatformat:2 }}
+                                            </div>
+                                            <div class="mt-2 text-xs">
+                                                <span class="text-muted">Unidades totales</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-boxes fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-xl-3 col-md-6 mb-3">
+                            <div class="card border-left-warning shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                                Promedio por Venta
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                RD$ {% if total_ventas > 0 %}{{ total_monto|calcular_promedio:total_ventas|floatformat:2 }}{% else %}0.00{% endif %}
+                                            </div>
+                                            <div class="mt-2 text-xs">
+                                                <span class="text-muted">Ticket promedio</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-calculator fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Filtros -->
+                    <div class="card mb-4 border-0 shadow-sm">
+                        <div class="card-header bg-light py-3">
+                            <h6 class="mb-0"><i class="fas fa-filter me-2"></i>Filtros de Búsqueda</h6>
+                        </div>
+                        <div class="card-body">
+                            <form method="get" class="row g-3">
+                                <div class="col-md-3">
+                                    <label for="search" class="form-label">Buscar:</label>
+                                    <input type="text" class="form-control" id="search" name="search" 
+                                           placeholder="Factura, cliente, producto..." 
+                                           value="{{ filtros.search|default:'' }}">
+                                </div>
+                                
+                                <div class="col-md-3">
+                                    <label for="vendedor" class="form-label">Vendedor:</label>
+                                    <select class="form-select" id="vendedor" name="vendedor">
+                                        <option value="">Todos los vendedores</option>
+                                        {% for vendedor in vendedores %}
+                                        <option value="{{ vendedor.id }}" 
+                                                {% if filtros.vendedor == vendedor.id|stringformat:'s' %}selected{% endif %}>
+                                            {{ vendedor.get_full_name|default:vendedor.username }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-3">
+                                    <label for="fecha_desde" class="form-label">Desde:</label>
+                                    <input type="date" class="form-control" id="fecha_desde" name="fecha_desde"
+                                           value="{{ filtros.fecha_desde|default:'' }}">
+                                </div>
+                                
+                                <div class="col-md-3">
+                                    <label for="fecha_hasta" class="form-label">Hasta:</label>
+                                    <input type="date" class="form-control" id="fecha_hasta" name="fecha_hasta"
+                                           value="{{ filtros.fecha_hasta|default:'' }}">
+                                </div>
+                                
+                                <div class="col-12">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-search me-1"></i>Buscar
+                                            </button>
+                                            <a href="{% url 'prestamos:listar_ventas' %}" class="btn btn-secondary">
+                                                <i class="fas fa-times me-1"></i>Limpiar
+                                            </a>
+                                        </div>
+                                        <div class="btn-group">
+                                            <a href="?fecha_desde={{ hoy }}" class="btn btn-outline-info btn-sm">
+                                                Hoy
+                                            </a>
+                                            <a href="?fecha_desde={{ siete_dias_atras }}" class="btn btn-outline-info btn-sm">
+                                                7 días
+                                            </a>
+                                            <a href="?fecha_desde={{ treinta_dias_atras }}" class="btn btn-outline-info btn-sm">
+                                                30 días
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Tabla de Ventas -->
+                    <div class="card border-0 shadow">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="border-0">N° FACTURA</th>
+                                            <th class="border-0">FECHA</th>
+                                            <th class="border-0">CLIENTE</th>
+                                            <th class="border-0">PRODUCTO</th>
+                                            <th class="border-0 text-center">CANTIDAD</th>
+                                            <th class="border-0 text-end">PRECIO UNIT.</th>
+                                            <th class="border-0 text-end">TOTAL</th>
+                                            <th class="border-0">VENDEDOR</th>
+                                            <th class="border-0 text-center">ACCIONES</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for venta in ventas %}
+                                        <tr>
+                                            <td class="fw-bold">
+                                                <span class="badge bg-dark">{{ venta.numero_factura }}</span>
+                                            </td>
+                                            <td>
+                                                <small>{{ venta.fecha_venta|date:"d/m/Y" }}</small><br>
+                                                <small class="text-muted">{{ venta.fecha_venta|date:"H:i" }}</small>
+                                            </td>
+                                            <td>
+                                                <strong>{{ venta.cliente_nombre|truncatechars:20 }}</strong>
+                                                {% if venta.cliente_cedula %}
+                                                <br><small class="text-muted">{{ venta.cliente_cedula }}</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {{ venta.herramienta.nombre|truncatechars:25 }}<br>
+                                                <small class="text-muted">Cód: {{ venta.herramienta.codigo }}</small>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-info">
+                                                    {{ venta.cantidad_vendida }} {{ venta.herramienta.tipo_unidad.abreviatura }}
+                                                </span>
+                                            </td>
+                                            <td class="text-end fw-bold">
+                                                RD$ {{ venta.precio_unitario }}
+                                            </td>
+                                            <td class="text-end">
+                                                <strong class="text-success">RD$ {{ venta.total }}</strong>
+                                            </td>
+                                            <td>
+                                                <small>{{ venta.vendedor.get_full_name|default:venta.vendedor.username }}</small>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <a href="{% url 'prestamos:factura_venta' venta.id %}" 
+                                                       class="btn btn-outline-primary" title="Ver factura">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{% url 'prestamos:factura_venta' venta.id %}?print=true" 
+                                                       class="btn btn-outline-success" title="Imprimir" target="_blank">
+                                                        <i class="fas fa-print"></i>
+                                                    </a>
+                                                    <a href="{% url 'prestamos:descargar_pdf_venta' venta.id %}" 
+                                                       class="btn btn-outline-danger" title="Descargar PDF">
+                                                        <i class="fas fa-file-pdf"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="9" class="text-center py-5">
+                                                <div class="text-muted">
+                                                    <i class="fas fa-shopping-cart fa-3x mb-3"></i>
+                                                    <h5 class="mb-2">No se encontraron ventas</h5>
+                                                    <p class="mb-0">No hay ventas registradas con los filtros aplicados</p>
+                                                    <a href="{% url 'prestamos:crear_venta' %}" class="btn btn-success mt-3">
+                                                        <i class="fas fa-plus-circle me-1"></i>Registrar primera venta
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Pie de tabla con totales -->
+                        {% if ventas %}
+                        <div class="card-footer bg-light">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <small class="text-muted">
+                                        Mostrando {{ page_obj.start_index }} - {{ page_obj.end_index }} de {{ total_ventas }} ventas
+                                    </small>
+                                </div>
+                                <div class="col-md-6 text-end">
+                                    <span class="fw-bold">Total filtrado:</span>
+                                    <span class="text-success fw-bold ms-2">
+                                        RD$ {{ total_monto|floatformat:2 }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Paginación -->
+                    {% if page_obj.paginator.num_pages > 1 %}
+                    <nav aria-label="Paginación" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in filtros.items %}&{{ key }}={{ value }}{% endfor %}">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if num == page_obj.number %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% for key, value in filtros.items %}&{{ key }}={{ value }}{% endfor %}">
+                                        {{ num }}
+                                    </a>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in filtros.items %}&{{ key }}={{ value }}{% endfor %}">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                    
+                    <!-- Top Vendedores (Opcional) -->
+                    {% if top_vendedores %}
+                    <div class="card mt-4 border-0 shadow-sm">
+                        <div class="card-header bg-light py-3">
+                            <h6 class="mb-0"><i class="fas fa-trophy me-2 text-warning"></i>Top Vendedores</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                {% for vendedor in top_vendedores %}
+                                <div class="col-md-4 mb-3">
+                                    <div class="card border-start border-warning border-3 h-100">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center">
+                                                <div class="flex-shrink-0">
+                                                    <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                                                        <i class="fas fa-user-tie text-warning"></i>
+                                                    </div>
+                                                </div>
+                                                <div class="flex-grow-1 ms-3">
+                                                    <h6 class="mb-1">{{ vendedor.vendedor__first_name|default:vendedor.vendedor__username }}</h6>
+                                                    <div class="small text-muted">
+                                                        Ventas: {{ vendedor.total_ventas }} | 
+                                                        Total: RD$ {{ vendedor.monto_total|floatformat:2 }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+
+
+.card {
+    border-radius: 0.5rem;
+}
+.table th {
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.table td {
+    vertical-align: middle;
+}
+.border-left-primary {
+    border-left-color: #4e73df !important;
+}
+.border-left-success {
+    border-left-color: #1cc88a !important;
+}
+.border-left-info {
+    border-left-color: #36b9cc !important;
+}
+.border-left-warning {
+    border-left-color: #f6c23e !important;
+}
+.shadow {
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
+}
+
+.bg-purple {
+    background-color: #6f42c1 !important;
+}
+
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Inicializar tooltips
+    $('[title]').tooltip();
+    
+    // Auto-submit al cambiar filtros rápidos
+    $('#vendedor').change(function() {
+        $(this).closest('form').submit();
+    });
+});
+</script>
+{% endblock %}
